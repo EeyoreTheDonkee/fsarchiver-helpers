@@ -20,7 +20,7 @@ Typical usage with mc is to:
 + select an archive of interest
 + keypress F2 and select an operator
 
-More detailed manual TBW
+**More detailed manual TBW**
 
 ## Dependencies
 + Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
