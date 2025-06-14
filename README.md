@@ -7,7 +7,7 @@ fsarchiver: helper scripts and approach(es)
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
 
 ## Benefits
-+ Everything is TUI
++ TUI
 + FSArchiver:
   + file-system can be restored to a partition with different size and different file-system type!
   + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - convenient, uses cases, but snapshots are not safe)
