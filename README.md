@@ -9,7 +9,7 @@ Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https:/
 ## Benefits
 + FSArchiver:
   + file-system can be restored to a partition with different size and different file-system type!
-  + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - not safe)
+  + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - convenient, uses cases, but snapshots are not safe)
 + fsarchiver-helper:
   + archives can be inspected for content or meta-data
   + fine grain restoral control (e.g. individual files)
