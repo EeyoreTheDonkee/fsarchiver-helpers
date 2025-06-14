@@ -2,13 +2,13 @@
 
 (DRAFT)
 
-fsarchiver: helper scripts and approache(s)
+fsarchiver: helper scripts and approach(es)
 
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
 
 1. Overview 
 
-Typical usage with mc is to navigate to a directory containing fsarchiver file-system archive file, select an archive of interest, keypress F2 and a menu of options will display:
+-Typical usage with mc is to navigate to a directory containing fsarchiver file-system archive file, select an archive of interest, keypress F2 and a menu of options will display:
 	
 	Menu items include:
 		1. probe
@@ -20,13 +20,16 @@ Typical usage with mc is to navigate to a directory containing fsarchiver file-s
 		7. configuration (info)
 		
 	Additional user specified options as desired
-		
-	Note that the copyout functions perform the bulk of the help, as they execute fsarchiver with desired parameters to make the archive contents available for perusal, etc.
+
+
+-Note that the copyout functions perform the bulk of the help, as they execute fsarchiver with desired parameters to make the archive contents available for perusal, etc.
 	
 2. Dependencies
 
-Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended), 
+	Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended), 
+
 3. Configuration
+
 	fsarchiver.tcl, mc local menu
 4. Installation
    - backfsdir - fallocate or dd c200_{btrfs,ext4,vfat}
