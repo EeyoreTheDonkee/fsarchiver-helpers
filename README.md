@@ -37,4 +37,4 @@ Other than the main apps, the helper script requires [tclsh](https://sourceforge
    - naming conventions
    - fsarchiver for filesystems, rsync for directories
    - some functionality could be put into fuser menus via “sudo”, etc. but, I have found this to be of limited use.
-   - I have found that mc combined with konsole or qterminal is very helpful.
+   - I have found that combining mc with konsole shortcuts or qterminal bookmarks is very helpful (I may describe or show examples of this at some point)
