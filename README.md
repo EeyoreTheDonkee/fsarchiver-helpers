@@ -6,6 +6,14 @@ fsarchiver: helper scripts and approach(es)
 
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
 
+## Benefits
++ FSArchiver:
+  + file-system can be restored to a partition with different size and different file-system!
+  + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - not safe)
++ fsarchiver-helper:
+  + archives can be inspected for content or meta-data
+  + fine grain control restoral (e.g. individual files)
+
 ## Overview 
 Typical usage with mc is to: 
 + sudo COLORTERM=truecolor mc --skin=seasons-autumn16M
@@ -40,3 +48,4 @@ Typical usage with mc is to:
    - fsarchiver for filesystems, rsync for directories
    - some functionality could be put into fuser menus via “sudo”, etc. but, I have found this to be of limited use.
    - I have found that combining mc with konsole shortcuts or qterminal bookmarks is very helpful (I may describe or show examples of this at some point)
+
