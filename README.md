@@ -18,7 +18,7 @@ Typical usage with mc is to:
 + Note that the copyout operators perform the bulk of the help, as they execute fsarchiver with desired parameters 
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
-+ keypress F2 and select an operator
++ keypress F2 and double-click an operator
 
 **More detailed manual TBW**
 
