@@ -18,9 +18,9 @@ Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https:/
 		6. mount/unmount
 		7. configuration (info)
 		
-		Additional user specified options as desired
+Additional user specified options as desired
 		
-		Note that the copyout functions perform the bulk of the help, as they execute fsarchiver with desired parameters to make the archive contents available for perusal, etc.
+Note that the copyout functions perform the bulk of the help, as they execute fsarchiver with desired parameters to make the archive contents available for perusal, etc.
 	
 2. Dependencies, other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended), 
 3. Configuration
