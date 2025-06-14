@@ -8,6 +8,7 @@ Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https:/
 
 ## Overview 
 Typical usage with mc is to: 
++ sudo COLORTERM=truecolor mc --skin=seasons-autumn16M
 + navigate to a directory containing fsarchiver file-system archive file
 + keypress F2 and a menu of options will display:
 
@@ -22,7 +23,8 @@ Typical usage with mc is to:
 More detailed manual TBW
 
 ## Dependencies
-Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended), 
++ Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
++ elevated credentials
 
 ## Installation
 + fsarchiver.tcl
