@@ -35,7 +35,7 @@ Typical usage with mc is to:
 + elevated credentials
 
 ## Installation
-+ fsarchiver.tcl
++ fsarchiver.tcl (suggested location /usr/local/sbin)
   - backfsdir - fallocate or dd c200_{btrfs,ext4,vfat}
   - mountfsdir - fsabackup_{btrfs,ext4,vfat}
 + .mc.menu
