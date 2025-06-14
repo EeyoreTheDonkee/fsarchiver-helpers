@@ -12,7 +12,7 @@ Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https:/
   + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - not safe)
 + fsarchiver-helper:
   + archives can be inspected for content or meta-data
-  + fine grain control restoral (e.g. individual files)
+  + fine grain restoral control (e.g. individual files)
 
 ## Overview 
 Typical usage with mc is to: 
