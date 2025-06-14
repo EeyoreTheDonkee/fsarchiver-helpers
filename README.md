@@ -36,9 +36,9 @@ Typical usage with mc is to:
 
 ## Installation
 + fsarchiver.tcl
+  - backfsdir - fallocate or dd c200_{btrfs,ext4,vfat}
+  - mountfsdir - fsabackup_{btrfs,ext4,vfat}
 + .mc.menu
-- backfsdir - fallocate or dd c200_{btrfs,ext4,vfat}
-- mountfsdir - fsabackup_{btrfs,ext4,vfat}
 
 ## Conventions/suggestions
    - Note that copyout progress bar waits for fsarchiver to terminate before it signals DONE
