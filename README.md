@@ -9,11 +9,12 @@ Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https:/
 ## Benefits
 + [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface)
 + FSArchiver:
-  + file-system can be restored to a partition with different size and different file-system type!
-  + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original - convenient, use cases, but snapshots are not safe)
+  + file-system can be restored to a partition with different size and different file-system type
+  + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original)
 + fsarchiver-helpers:
   + archives can be inspected for content or meta-data
   + fine grain restoral control (e.g. individual files)
+  + archive testing
 
 ## Overview 
 Typical usage with mc is to: 
@@ -36,10 +37,12 @@ Typical usage with mc is to:
 + elevated credentials
 
 ## Installation
++ create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files
 + fsarchiver.tcl (suggested location /usr/local/sbin)
-  - backfsdir - fallocate or dd c200_{btrfs,ext4,vfat}
-  - mountfsdir - fsabackup_{btrfs,ext4,vfat}
-+ .mc.menu
+  - edit, change
+    - backfsdir - location of backingstore files fallocate or dd 
+    - mountfsdir - fsabackup_{btrfs,ext4,vfat}
++ .mc.menu - copy to archive directories
 
 ## Conventions/suggestions
    - Note that copyout progress bar waits for fsarchiver to terminate before it signals DONE
