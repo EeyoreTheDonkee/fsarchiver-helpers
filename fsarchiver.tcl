@@ -174,6 +174,7 @@ proc copyout_pbar {delay fsize loopdev fspid {value 0}} {
 #    fsarchiver.tcl copyout id archivename
 #    fsarchiver.tcl mount
 #    fsarchiver.tcl unmount
+#    fsarchiver.tcl mountall
 #    fsarchiver.tcl config
 
 # Backing store directory
@@ -182,6 +183,8 @@ const backfsdir /mnt/bees
 const backfstag c200
 # Copyout mount point head
 const mountfsdir /media/root
+# Number of compression threads
+const nthr 8
 
 set fsaid 1
 if {[llength $argv] > 1} {
@@ -240,12 +243,13 @@ switch $cmd {
         set uuid [exec -- uuidgen --random]
         set fsize [getrestoresize $fsaid $output]
         # Start up restfs and a progress bar
-        catch {exec -- fsarchiver -x -j8 restfs $fsa id=$fsaid,dest=$loopdev,label=$label,uuid=$uuid 2>@1 &} fspid
+        catch {exec -- fsarchiver -x -j$nthr restfs $fsa id=$fsaid,dest=$loopdev,label=$label,uuid=$uuid 2>@1 &} fspid
         copyout_pbar 62 $fsize $loopdev $fspid
         vwait copyout_done
         exit
     }
     "mount" {
+        # mounts backingstore files that have been modified in the last hour
         foreach fsys {ext4 btrfs vfat} {
            	set msec [expr [clock seconds] - [file mtime ${backfsdir}/${backfstag}_${fsys}.img]]
            	if {$msec < 3600} {
@@ -255,7 +259,15 @@ switch $cmd {
         }
     	exit
     }
+    "mountall" {
+        # mounts all backingstore files
+        foreach fsys {ext4 btrfs vfat} {
+            mount_backfile "${backfsdir}/${backfstag}_${fsys}.img"
+        }
+    	exit
+    }
     "unmount" {
+        # unmounts all backingstore files, frees up corresponding loop devices
         foreach fsys {ext4 btrfs vfat} {
             detach_backfile "${backfsdir}/${backfstag}_${fsys}.img"
         }
@@ -267,10 +279,12 @@ switch $cmd {
         puts "fsarchiver.tcl configuration:"
     	puts "   backing store directory: ${backfsdir}"
     	puts "   mountpoint head: ${mountfsdir}"
+    	puts "   number of threads: ${nthr}"
         exit
     }
     default {
        exit 1
     }
 }
+
 
