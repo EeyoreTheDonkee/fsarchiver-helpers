@@ -50,6 +50,7 @@ Typical usage with mc is to:
    - Using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
    - naming conventions
    - fsarchiver for filesystems, rsync for directories
+   - Combining mc with konsole shortcuts or qterminal bookmarks
+   - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
    - some functionality could be put into fuser menus via “sudo”, etc. but, I have found this to be of limited use.
-   - I have found that combining mc with konsole shortcuts or qterminal bookmarks is very helpful (I may describe or show examples of this at some point)
 
