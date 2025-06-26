@@ -25,7 +25,7 @@ Typical usage with mc is to:
 ![](https://github.com/EeyoreTheDonkee/fsarchiver-helpers/blob/main/images/mc_with_fshelp_menu.jpg)
 
 + Local menu shows items that include fsarchiver-helper operators and additional items as desired
-+ Note that the copyout operators perform the bulk of the help, as they execute fsarchiver with desired parameters 
+  + Note that the copyout operators perform the bulk of the help, as they execute fsarchiver with desired parameters 
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
 + keypress F2 and double-click an operator
@@ -42,7 +42,7 @@ Typical usage with mc is to:
   - edit, change
     - backfsdir - location of backingstore files fallocate or dd 
     - mountfsdir - fsabackup_{btrfs,ext4,vfat}
-+ .mc.menu - copy to archive directories
++ .mc.menu - copy template to archive directories
 
 ## Conventions/suggestions
    - Note that copyout progress bar waits for fsarchiver to terminate before it signals DONE
