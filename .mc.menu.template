@@ -22,7 +22,6 @@ shell_patterns=0
 #   %0f   don't quote expanded macro
 ##############################################################################
 
-
 @       fsarchiver probe
         %view{ascii} fsarchiver.tcl probe
 
@@ -32,21 +31,35 @@ shell_patterns=0
 
 + ! t t
 @       fsarchiver copyout id=1 (to backstore)
-	( fsarchiver.tcl copyout 1 %f &)
+    	( fsarchiver.tcl copyout 1 %f &)
 
 + ! t t
 @       fsarchiver copyout id=0 (to backstore)
-	( fsarchiver.tcl copyout 0 %f &)
+    	( fsarchiver.tcl copyout 0 %f &)
 
 + ! t t
 @       fsarchiver copyout id=n (to backstore)
-	( fsarchiver.tcl copyout %{enter id:} %f &)
+    	( fsarchiver.tcl copyout %{enter id:} %f &)
 
 @       fsarchiver mount backstores
-	%view{ascii} fsarchiver.tcl mount
+    	%view{ascii} fsarchiver.tcl mount
+
+@       fsarchiver mountall backstores
+    	%view{ascii} fsarchiver.tcl mountall
 
 @       fsarchiver unmount backstores
-	%view{ascii} fsarchiver.tcl unmount
+    	%view{ascii} fsarchiver.tcl unmount
 
 @       fsarchiver.tcl config info
         %view{ascii} fsarchiver.tcl config
+
++ ! t t
+@       Edit with featherpad
+        featherpad %f &
+
+@       Start up disk utility
+        gnome-disks &
+
++ ! t t
+@       Open with cherrytree
+        cherrytree %f &
