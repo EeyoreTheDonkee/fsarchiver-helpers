@@ -22,7 +22,7 @@ Typical usage with mc is to:
 + navigate to a directory containing fsarchiver file-system archive file
 + keypress F2 and a menu of options will display:
 
-![](https://github.com/EeyoreTheDonkee/fsarchiver-helpers/blob/main/images/mc_with_fshelp_menu.jpg)
+![](/../main/images/mc_with_fshelp_menu.jpg)
 
 + Local menu shows items that include fsarchiver-helper operators and additional items as desired
   + Note that the copyout operators perform the bulk of the help, as they execute fsarchiver with desired parameters 
