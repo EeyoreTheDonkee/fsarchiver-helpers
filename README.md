@@ -40,7 +40,7 @@ Typical usage with mc is to:
 + create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files
 + fsarchiver.tcl (suggested location /usr/local/sbin)
   - edit, change
-    - backfsdir - location of backingstore files fallocate or dd 
+    - backfsdir - location of backingstore files
     - mountfsdir - fsabackup_{btrfs,ext4,vfat}
 + .mc.menu - copy template to archive directories
 
