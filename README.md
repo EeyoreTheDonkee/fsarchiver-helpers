@@ -42,6 +42,7 @@ Typical usage with mc is to:
   - edit, change
     - backfsdir - location of backingstore files
     - mountfsdir - fsabackup_{btrfs,ext4,vfat}
+    - nthr - number of fsarchiver compression threads
 + .mc.menu - copy template to archive directories
 
 ## Conventions/suggestions
