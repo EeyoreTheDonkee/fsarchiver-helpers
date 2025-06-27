@@ -254,7 +254,6 @@ switch $cmd {
            	set msec [expr [clock seconds] - [file mtime ${backfsdir}/${backfstag}_${fsys}.img]]
            	if {$msec < 3600} {
               	mount_backfile "${backfsdir}/${backfstag}_${fsys}.img"
-              	incr n
            	}
         }
     	exit
