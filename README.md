@@ -38,10 +38,21 @@ Typical usage with mc is to:
 
 ## Installation
 + create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files
+  ```
+  fallocate -l 200G /mnt/bees/c200_ext4.img
+  fallocate -l 200G /mnt/bees/c200_btrfs.img
+  fallocate -l 200G /mnt/bees/c200_vfat.img
+  ```
+  or something like (for older storage devices):
+  ```
+  dd if=/dev/zero of=/mnt/bees/c200_ext4.img bs=2M count=102400
+  dd if=/dev/zero of=/mnt/bees/c200_btrfs.img bs=2M count=102400
+  dd if=/dev/zero of=/mnt/bees/c200_vfat.img bs=2M count=102400
+  ```
 + fsarchiver.tcl (suggested location /usr/local/sbin)
   - edit, change
-    - backfsdir - location of backingstore files
-    - mountfsdir - fsabackup_{btrfs,ext4,vfat}
+    - backfsdir - location of backingstore files (e.g. /mnt/bees)
+    - mountfsdir - mount point head directory (e.g. /media/root)
     - nthr - number of fsarchiver compression threads
 + .mc.menu - copy template to archive directories
 
