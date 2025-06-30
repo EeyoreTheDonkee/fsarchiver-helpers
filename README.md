@@ -1,10 +1,12 @@
 # fsarchiver-helpers
 
-(DRAFT)
-
 fsarchiver: helper scripts and approach(es)
 
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
+
+fsarchiver-helpers is for fsarchiver filesystem backups
+
++ fsarchiver can back up directories (similar to tar, zip, etc.) and they are perhaps easier to deal with directly
 
 ## Benefits
 + [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface)
@@ -37,7 +39,7 @@ Typical usage with mc is to:
 + elevated credentials
 
 ## Installation
-+ create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files
++ create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files (can be any size)
   ```
   fallocate -l 200G /mnt/bees/c200_ext4.img
   fallocate -l 200G /mnt/bees/c200_btrfs.img
@@ -49,20 +51,22 @@ Typical usage with mc is to:
   dd if=/dev/zero of=/mnt/bees/c200_btrfs.img bs=2M count=102400
   dd if=/dev/zero of=/mnt/bees/c200_vfat.img bs=2M count=102400
   ```
-+ fsarchiver.tcl (suggested location /usr/local/sbin)
++ fsarchiver.tcl (must be in path, suggested location /usr/local/sbin)
   - edit, change
     - backfsdir - location of backingstore files (e.g. /mnt/bees)
+    - backfstag - prefix tag of backingstore files (e.g. c200)
     - mountfsdir - mount point head directory (e.g. /media/root)
-    - nthr - number of fsarchiver compression threads
+    - nthr - number of fsarchiver compression threads (e.g. 8)
 + .mc.menu - copy template to archive directories
 
 ## Conventions/suggestions
-   - Note that copyout progress bar waits for fsarchiver to terminate before it signals DONE
+   - The naming convention for the backingstore files serves only as a queue to content
+     - fsarchiver.tcl will inspect the file system type associated with an id in a backup. Effectively, btrfs file system backups will be saved in btrfs, while filesytem types that contain the string "fat" will be saved in vfat and everything else will be saved in ext4 e.g. c200_ext4.img. Since fsarchiver will actually format the backingstore according to the filesystem type stored in the backup, the naming convention has no functional effect.
+   - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
       - when done - it might be useful to select the “other” panel in mc to reset the command line
-   - Using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
-   - naming conventions
-   - fsarchiver for filesystems, rsync for directories
+   - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
+   - naming conventions for fsarchive archives
+     - consistency and helpful names & directories that provide a queue to content is suggested
    - Combining mc with konsole shortcuts or qterminal bookmarks
    - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
-   - some functionality could be put into fuser menus via “sudo”, etc. but, I have found this to be of limited use.
-
+   
