@@ -9,7 +9,7 @@ fsarchiver-helpers is for fsarchiver filesystem backups
 + fsarchiver can back up directories (similar to tar, zip, etc.) and they are perhaps easier to deal with directly
 
 ## Benefits
-+ [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface)
++ [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) enabled by mc e.g. menus, popups, keycodes, customization, etc.
 + FSArchiver:
   + file-system can be restored to a partition with different size and different file-system type
   + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original)
