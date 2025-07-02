@@ -4,22 +4,23 @@ fsarchiver: helper scripts and approach(es)
 
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
 
-fsarchiver-helpers is for fsarchiver filesystem backups
+fsarchiver-helpers is for fsarchiver _filesystem_ backups
 
 + fsarchiver can back up directories (similar to tar, zip, etc.) and they are perhaps easier to deal with directly
 
 ## Benefits
-+ [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) enabled by mc e.g. menus, popups, keycodes, customization, etc.
++ [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) _enabled by mc_ e.g. menus, popups, keycodes, customization, etc.
 + FSArchiver:
   + file-system can be restored to a partition with different size and different file-system type
   + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original)
 + fsarchiver-helpers:
   + archives can be inspected for content or meta-data
-  + fine grain restoral control (e.g. individual files)
+  + fine grain restoral control (e.g. individual files, directories)
   + archive testing
 
 ## Overview 
 Typical usage with mc is to: 
+
 + sudo COLORTERM=truecolor mc --skin=seasons-autumn16M
 + navigate to a directory containing fsarchiver file-system archive file
 + keypress F2 and a menu of options will display:
@@ -27,7 +28,7 @@ Typical usage with mc is to:
 ![](/../main/images/mc_with_fshelp_menu.jpg)
 
 + Local menu shows items that include fsarchiver-helper operators and additional items as desired
-  + Note that the copyout operators perform the bulk of the help, as they execute fsarchiver with desired parameters 
+  + Note that the copyout operators perform the bulk of the help, as they execute _fsarchiver restfs_ with desired parameters 
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
 + keypress F2 and double-click an operator
@@ -58,6 +59,8 @@ Typical usage with mc is to:
     - mountfsdir - mount point head directory (e.g. /media/root)
     - nthr - number of fsarchiver compression threads (e.g. 8)
 + .mc.menu - copy template to archive directories
++ download tcl9.0, cd tcl/unix, autoconfig, ./configure, make install
+  - Installs tclsh9.0 in /usr/local/bin
 
 ## Conventions/suggestions
    - The naming convention for the backingstore files serves only as a queue to content
@@ -70,3 +73,4 @@ Typical usage with mc is to:
    - Combining mc with konsole shortcuts or qterminal bookmarks
    - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
    
+
