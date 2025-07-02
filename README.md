@@ -4,7 +4,7 @@ fsarchiver: helper scripts and approach(es)
 
 Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
 
-fsarchiver-helpers is for fsarchiver _filesystem_ backups
+_fsarchiver-helpers_ is for fsarchiver _filesystem_ backups
 
 + fsarchiver can back up directories (similar to tar, zip, etc.) and they are perhaps easier to deal with directly
 
@@ -14,7 +14,7 @@ fsarchiver-helpers is for fsarchiver _filesystem_ backups
   + file-system can be restored to a partition with different size and different file-system type
   + archives can be stored anywhere (i.e. vs snapshots that reside on the same media as the original)
 + fsarchiver-helpers:
-  + archives can be inspected for content or meta-data
+  + archives can be inspected for content or meta-data via mc
   + fine grain restoral control (e.g. individual files, directories)
   + archive testing
 
@@ -40,14 +40,15 @@ Typical usage with mc is to:
 + elevated credentials
 
 ## Installation
++ Download [fsarchiver-helpers]() (e.g. via the green <> Code button)
 + create backingstore files via fallocate or dd c200_{btrfs,ext4,vfat} e.g. 200 GB files (can be any size)
-  ```
+  ```bash
   fallocate -l 200G /mnt/bees/c200_ext4.img
   fallocate -l 200G /mnt/bees/c200_btrfs.img
   fallocate -l 200G /mnt/bees/c200_vfat.img
   ```
   or something like (for older storage devices):
-  ```
+  ```bash
   dd if=/dev/zero of=/mnt/bees/c200_ext4.img bs=2M count=102400
   dd if=/dev/zero of=/mnt/bees/c200_btrfs.img bs=2M count=102400
   dd if=/dev/zero of=/mnt/bees/c200_vfat.img bs=2M count=102400
@@ -60,20 +61,26 @@ Typical usage with mc is to:
       - **backfstag** - prefix tag of backingstore files (e.g. c200)
       - **mountfsdir** - mount point head directory (e.g. /media/root)
       - **nthr** - number of fsarchiver compression threads (e.g. 8)
-+ .mc.menu - copy template to archive directories
++ .mc.menu - copy template to archive directories e.g.
 
-```
+```bash
     cp .mc.menu.template /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
     sudo chown root /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
 ```
-+ download tcl9.0, cd tcl/unix, autoconfig, ./configure, make install
-  - Installs tclsh9.0 in /usr/local/bin
++ download tcl9.0+ and install (default install is /usr/local/bin)
+
+```bash 
+    cd tcl/unix
+    autoconfig
+    ./configure
+    make install
+```
 
 ## Conventions/suggestions
-   - The naming convention for the backingstore files serves only as a queue to content
-     - fsarchiver.tcl will inspect the file system type associated with an id in a backup. Effectively, btrfs file system backups will be saved in btrfs, while filesytem types that contain the string "fat" will be saved in vfat and everything else will be saved in ext4 e.g. c200_ext4.img. Since fsarchiver will actually format the backingstore according to the filesystem type stored in the backup, the naming convention has no functional effect.
+   - The naming convention for the backingstore files (bsf) serves only as a queue to content
+     - fsarchiver.tcl will inspect the file system type associated with an id in a backup file. Effectively, btrfs file system backups will be copied to the btrfs bsf, while filesytem types that contain the string "fat" will be copied to  the vfat bsf and everything else will be copied to the ext4 bsf e.g. c200_ext4.img. Since fsarchiver will actually format the bsf according to the filesystem type stored in the backup, the naming convention has no functional effect.
    - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
-     - when done - select the “other” panel in mc to reset the mc command line
+     - when done - selecting the “other” panel in mc will reset the mc command line
    - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
    - naming conventions for fsarchive archives
      - consistency and helpful names & directories that provide a queue to content is suggested
