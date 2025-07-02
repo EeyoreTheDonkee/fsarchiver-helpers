@@ -52,13 +52,20 @@ Typical usage with mc is to:
   dd if=/dev/zero of=/mnt/bees/c200_btrfs.img bs=2M count=102400
   dd if=/dev/zero of=/mnt/bees/c200_vfat.img bs=2M count=102400
   ```
-+ fsarchiver.tcl (must be in path, suggested location /usr/local/sbin)
-  - edit, change
-    - backfsdir - location of backingstore files (e.g. /mnt/bees)
-    - backfstag - prefix tag of backingstore files (e.g. c200)
-    - mountfsdir - mount point head directory (e.g. /media/root)
-    - nthr - number of fsarchiver compression threads (e.g. 8)
++ fsarchiver.tcl (must be in the path and executable, suggested location /usr/local/sbin)
+  - edit fsarchiver.tcl
+    - search for "Start of main script logic"
+    - Change the values of the following parameters as desired:
+      - **backfsdir** - location of backingstore files (e.g. /mnt/bees)
+      - **backfstag** - prefix tag of backingstore files (e.g. c200)
+      - **mountfsdir** - mount point head directory (e.g. /media/root)
+      - **nthr** - number of fsarchiver compression threads (e.g. 8)
 + .mc.menu - copy template to archive directories
+
+```
+    cp .mc.menu.template /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
+    sudo chown root /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
+```
 + download tcl9.0, cd tcl/unix, autoconfig, ./configure, make install
   - Installs tclsh9.0 in /usr/local/bin
 
@@ -66,7 +73,7 @@ Typical usage with mc is to:
    - The naming convention for the backingstore files serves only as a queue to content
      - fsarchiver.tcl will inspect the file system type associated with an id in a backup. Effectively, btrfs file system backups will be saved in btrfs, while filesytem types that contain the string "fat" will be saved in vfat and everything else will be saved in ext4 e.g. c200_ext4.img. Since fsarchiver will actually format the backingstore according to the filesystem type stored in the backup, the naming convention has no functional effect.
    - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
-      - when done - it might be useful to select the “other” panel in mc to reset the command line
+     - when done - select the “other” panel in mc to reset the mc command line
    - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
    - naming conventions for fsarchive archives
      - consistency and helpful names & directories that provide a queue to content is suggested
