@@ -21,19 +21,20 @@ _fsarchiver-helpers_ is for fsarchiver _filesystem_ backups
 ## Overview 
 Typical usage with mc is to: 
 
-+ sudo COLORTERM=truecolor mc --skin=seasons-autumn16M
+```bash
+ sudo COLORTERM=truecolor mc --skin=seasons-autumn16M
+```
 + navigate to a directory containing fsarchiver file-system archive file
 + keypress F2 and a menu of options will display:
 
-![](/../main/images/mc_with_fshelp_menu.jpg)
+![](images/mc_with_fshelp_menu.jpg)
 
 + Local menu shows items that include fsarchiver-helper operators and additional items as desired
   + Note that the copyout operators perform the bulk of the help, as they execute _fsarchiver restfs_ with desired parameters 
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
 + keypress F2 and double-click an operator
-
-**More detailed manual TBW**
++ Please see the [fsarchiver Users Guide](/../main/GUIDE.md) for more details
 
 ## Dependencies
 + Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
