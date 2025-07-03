@@ -85,7 +85,7 @@ Typical usage with mc is to:
    - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
    - naming conventions for fsarchive archives
      - consistency and helpful names & directories that provide a queue to content is suggested
-   - Combining mc with konsole shortcuts or qterminal bookmarks
+   - Combining mc with [konsole](https://konsole.kde.org) shortcuts or [qterminal](https://github.com/lxqt/qterminal) bookmarks
    - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
    
 
