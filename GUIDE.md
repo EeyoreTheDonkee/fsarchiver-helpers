@@ -31,7 +31,7 @@ fsarchiver archinfo
 
 + navigate to a directory containing a _local_ .mc.menu file
 + keypress F2
-+ double click on + double click on:
++ double click on:
 
 ```
 fsarchiver probe
