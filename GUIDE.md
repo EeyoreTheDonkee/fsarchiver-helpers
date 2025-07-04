@@ -1,9 +1,19 @@
 # fsarchiver-helpers User Guide
 
-![](images/mc_with_fshelp_menu.jpg)
+
+<picture>
+<img src="images/mc_with_fshelp_menu.jpg" width="60%" height="auto">
+</picture>
+
 
 > [!IMPORTANT]
 > fsarchiver-helpers requires a _local_ .mc.menu file in the directory where the fsarchiver archive(s) to be operated on reside(s)
+---
+
+### TOC
+- [Display archive metadata](GUIDE.md#how-to-display-info-about-an-fsarchiver-archive)
+- [Display installed filesystems](GUIDE.md#detection-of-filesystems)
+- [How to mount and peruse an fsa filesystem](GUIDE.md#how-to-copyout-mount-and-peruse-an-fsarchiver-archive-filesystem)
 
 ## How to Display info about an fsarchiver archive
 In Midnight Commander (mc)
