@@ -20,7 +20,7 @@ fsarchiver archinfo
 
 + The info is presented in the mc Internal File Viewer (e.g. below)
   - keypress F1 for more info on the Internal File Viewer
-  - keypress \<ESC\> to dismiss each popup in turn
+  - keypress F10 to exit the Internal File Viewer
 
 ![mc fsarchiver archinfo](images/mc_fsarchiver_archinfo_view.jpg)
 
