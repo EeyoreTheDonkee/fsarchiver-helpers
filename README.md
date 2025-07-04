@@ -68,7 +68,7 @@ Typical usage with mc is to:
     cp .mc.menu.template /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
     sudo chown root /mnt/jagular/fsarchiver/Chrisrobin/trixie/.mc.menu
 ```
-+ download tcl9.0+ and install (default install is /usr/local/bin)
++ download tcl9.0+ and install (default install location is /usr/local/bin)
 
 ```bash 
     cd tcl/unix
