@@ -37,8 +37,9 @@ Typical usage with mc is to:
 + Please see the [fsarchiver-helpers Users Guide](/../main/GUIDE.md) for more details
 
 ## Dependencies
-+ Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
 + elevated credentials
++ Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
++ (TBD) fsarchiver-helpers makes no provision for encrypted archives currently
 
 ## Installation
 + Download [fsarchiver-helpers]() (e.g. via the green <> Code button)
@@ -54,6 +55,10 @@ Typical usage with mc is to:
   dd if=/dev/zero of=/mnt/bees/c200_btrfs.img bs=2M count=102400
   dd if=/dev/zero of=/mnt/bees/c200_vfat.img bs=2M count=102400
   ```
+
+> [!NOTE] 
+> backingstore files should not need to be recreated. They can be thought of as temporary storage. i.e. they will be overwritten and/or unmounted (sometimes daily by the OS)
+
 + fsarchiver.tcl (must be in the path and executable, suggested location /usr/local/sbin)
   - edit fsarchiver.tcl
     - search for "Start of main script logic"

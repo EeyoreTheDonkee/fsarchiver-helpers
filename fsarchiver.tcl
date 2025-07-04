@@ -127,7 +127,7 @@ proc mount_backfile {fname} {
        # for progress bar..
        if {![file exists ${mountfsdir}/fsabackup_$fstype]} {
           file mkdir ${mountfsdir}/fsabackup_$fstype
-          file attributes ${mountfsdir}/fsabackup_$fstype -permissions 0755
+          file attributes ${mountfsdir}/fsabackup_$fstype -permissions 0777
        }
        puts "mount $loopdev ${mountfsdir}/fsabackup_$fstype"
        catch {exec -- mount $loopdev ${mountfsdir}/fsabackup_$fstype} out

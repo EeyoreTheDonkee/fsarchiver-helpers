@@ -1,6 +1,6 @@
 # fsarchiver-helpers User Guide
 
-![mc fsarchiver archinfo](images/mc_with_fshelp_menu.jpg)
+![](images/mc_with_fshelp_menu.jpg)
 
 > [!IMPORTANT]
 > fsarchiver-helpers requires a _local_ .mc.menu file in the directory where the fsarchiver archive(s) to be operated on reside(s)
