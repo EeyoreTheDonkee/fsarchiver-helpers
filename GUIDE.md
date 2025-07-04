@@ -42,9 +42,20 @@ fsarchiver probe
 + Select an achive e.g. backup-msata-chrisrobin-trixie-20250621.fsa
 + keypress F2
 + Inspect the archive via [fsarchiver archinfo](GUIDE.md#how-to-display-info-about-an-fsarchiver-archive)
-  - e.g. In the example Internal File Viewer output the main filesystem has an fsarchiver id=1 (i.e. it's an ext2 filesystem in the example)
+  - e.g. In the example Internal File Viewer output, the main filesystem has an fsarchiver id=1 (i.e. it's an ext2 filesystem in the example)
 + double click on:
 
 ```
 fsarchiver copyout (id=1)
 ```
+
+  - this will start the copyout and a progress bar will appear in the mc internal shell line.
++ After the progress bar displays **DONE** then bring up the menu and double click:
+
+```
+fsarchiver mount backstores
+```
+
++ The internal viewer will display where the mount point of the backingstore is located
++ Navigate to the mount point and the filesystem should be displayed in the mc panel. It is a fully restored filesystem. The only difference (effectively) is that it is contained in a backingstore file instead of a partition.
++ All normal directory, file activities can now be performed on the mounted backingstore e.g. selection of files, inspections, copies, deletes, edits, etc.

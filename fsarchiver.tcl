@@ -125,6 +125,10 @@ proc mount_backfile {fname} {
     # If it isn't mounted then mount it on one of the pre-made mount points
     if {[string match "/dev" $mntpoint]} {
        # for progress bar..
+       if {![file exists ${mountfsdir}/fsabackup_$fstype]} {
+          file mkdir ${mountfsdir}/fsabackup_$fstype
+          file attributes ${mountfsdir}/fsabackup_$fstype -permissions 0755
+       }
        puts "mount $loopdev ${mountfsdir}/fsabackup_$fstype"
        catch {exec -- mount $loopdev ${mountfsdir}/fsabackup_$fstype} out
        puts $out
