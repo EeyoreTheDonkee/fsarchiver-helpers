@@ -34,7 +34,7 @@ Typical usage with mc is to:
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
 + keypress F2 and double-click an operator
-+ Please see the [fsarchiver Users Guide](/../main/GUIDE.md) for more details
++ Please see the [fsarchiver-helpers Users Guide](/../main/GUIDE.md) for more details
 
 ## Dependencies
 + Other than the main apps, the helper script requires [tclsh](https://sourceforge.net/projects/tcl/files/) (version 8.4+ but, 9.0+ is recommended)
@@ -82,7 +82,7 @@ Typical usage with mc is to:
      - fsarchiver.tcl will inspect the file system type associated with an id in a backup file. Effectively, btrfs file system backups will be copied to the btrfs bsf, while filesytem types that contain the string "fat" will be copied to  the vfat bsf and everything else will be copied to the ext4 bsf e.g. c200_ext4.img. Since fsarchiver will actually format the bsf according to the filesystem type stored in the backup, the naming convention has no functional effect.
    - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
      - when done - selecting the “other” panel in mc will reset the mc command line
-   - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps
+   - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps on multiple systems
    - naming conventions for fsarchive archives
      - consistency and helpful names & directories that provide a queue to content is suggested
    - Combining mc with [konsole](https://konsole.kde.org) shortcuts or [qterminal](https://github.com/lxqt/qterminal) bookmarks
