@@ -16,7 +16,7 @@
 - [Display archive metadata](GUIDE.md#how-to-display-info-about-an-fsarchiver-archive)
 - [Display installed filesystems](GUIDE.md#detection-of-filesystems)
 - [How to mount and peruse an fsa filesystem](GUIDE.md#how-to-copyout-mount-and-peruse-an-fsarchiver-archive-filesystem)
-- [How to restore filesystems from an archive](GUIDE.md#how-to-restore-filesystems-from-and-archive)
+- [How to restore filesystems from an archive](GUIDE.md#how-to-restore-filesystems-from-an-archive)
 - [How to backup and restore directories](GUIDE.md#how-to-backup-and-restore-directories)
 
 ## How to configure fsarchiver.tcl
