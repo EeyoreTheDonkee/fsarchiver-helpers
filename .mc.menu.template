@@ -50,6 +50,9 @@ shell_patterns=0
 @       fsarchiver unmount backstores
     	%view{ascii} fsarchiver.tcl unmount
 
+@       fsarchiver restfs
+    	fsarchiver.tcl restfs %f
+
 @       fsarchiver.tcl config info
         %view{ascii} fsarchiver.tcl config
 
