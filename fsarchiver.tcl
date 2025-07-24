@@ -234,7 +234,7 @@ proc get_disk_part_dialog {fsa} {
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs $fsa" }
     set dcom [subst $dcom]
     append dcom {--keep-tite --radiolist "Select disk or partition:" 0 0 0 }
-    append dcom [join $items " "]
+    catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
     set istat [catch {exec bash -c $dcom 2>$tmpfile} choice]
@@ -291,7 +291,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     }
     append dcom {:" }
     append dcom {0 0 0 }
-    append dcom [join $items " "]
+    catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
     # Execute the dialog command and it will return buildlist
@@ -464,6 +464,8 @@ switch $cmd {
         	# buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
         	# list element.
         	final_restfs_checkpoint_and_go_ahead $archinfo $buildlist
+        } else {
+            puts "No unmounted disks or partitions available"
         }
     }
     "mclocalmenu" {
