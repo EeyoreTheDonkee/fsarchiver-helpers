@@ -41,7 +41,8 @@ Typical usage with mc is to start up mc via:
 
 ## Dependencies
 + elevated credentials
-+ mc, FSArchiver, [tclsh](https://sourceforge.net/projects/tcl/files/) (version 9.0+ is recommended), [dialog](https://invisible-island.net/dialog/) 
++ mc, FSArchiver, [tclsh](https://sourceforge.net/projects/tcl/files/) (version 9.0+ is recommended), [dialog](https://invisible-island.net/dialog/)
++ The user is expected to have intermediate facility with mc and FSArchiver.
 + Enough free space for 3 backingstore files (e.g. 3 * 200G = 600G)
   - (this is configurable) 
 + (TBD) fsarchiver-helpers makes no provision for encrypted archives currently

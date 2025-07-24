@@ -166,8 +166,8 @@ This will save the selected directory hierarchy to an fsa file (flat backup) in 
 
 ### How to restore a directory
 
-+ navigate to a directory containing fsarchiver directory containing a directory backup (flat backup) file in one mc panel.
-+ In the other mc panel navigate to the parent directory of the directory to be restored from the flat backup
++ navigate to a directory containing a directory backup (flat backup) file in one mc panel.
++ In the other mc panel, navigate to the parent directory of the directory to be restored from the flat backup
 + Select the flat backup file
 + In the mc shell line type:
  
