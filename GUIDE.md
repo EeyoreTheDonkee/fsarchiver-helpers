@@ -98,7 +98,8 @@ fsarchiver mount backstores
 
 ## How to restore filesystems from an archive
 
-> ![IMPORTANT] The copyout mechanism is _much_ safer than a direct restfs. Please be careful with restfs e.g. make sure the filesystems being written to are backed up, otherwise data loss can occur.
+> ![IMPORTANT] 
+> The copyout mechanism is _much_ safer than a direct restfs. Please be careful with restfs e.g. make sure the filesystems being written to are backed up, otherwise data loss can occur.
 
 + navigate to a directory containing an fsarchiver file-system archive file (and .mc.menu)
 + Select an achive e.g. backup-msata-chrisrobin-trixie-20250703.fsa
