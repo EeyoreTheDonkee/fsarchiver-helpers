@@ -41,7 +41,7 @@ proc getcreatedate {archinfo} {
 }
 
 proc getfscount {archinfo} {
-	# returns number of filesystems in the archive
+    # returns number of filesystems in the archive
     set archinfo [split $archinfo \n]
     foreach line $archinfo {
        if {[string first "Filesystems count" $line] > -1} {
@@ -151,7 +151,32 @@ proc isrunning {fspid} {
     return [expr {[llength [split $output \n]] > 3}]
 }
 
-proc copyout_pbar {delay fsize loopdev fspid {value 0}} {
+proc get_id_total_fsize {id2dev archinfo} {
+    # Given list of $idfsa,dest=/dev/$dev and archinfo
+    # return total number of bytes used in the original fs
+    set sum 0
+    foreach el $id2dev {
+       set idndev [split $el ,]
+       scan [lindex $idndev 0] "id=%d" fsaid
+       lappend sum [getrestoresize $fsaid $archinfo]
+    }
+    return [expr [join $sum +]]
+}
+
+proc get_total_used {id2dev} {
+    # Given list of $idfsa,dest=/dev/$dev
+    # return total number of bytes used in the dest filesystems
+    set sum 0
+    foreach el $id2dev {
+       set idndev [split $el ,]
+       scan [lindex $idndev 1] "dest=%s" destfs
+       catch {exec -- df --block-size 1 $destfs | tail -1} output
+       lappend sum [lindex $output 2]
+    }
+    return [expr [join $sum +]]
+}
+
+proc copyout_pbar {delay fsize id2dev fspid {value 0}} {
     # writes a tui progress bar to mc command line
     global copyout_done
     set bar_size 40
@@ -166,9 +191,8 @@ proc copyout_pbar {delay fsize loopdev fspid {value 0}} {
     puts -nonewline "\rProgress: \[${done_sub_bar}${todo_sub_bar}\] [format %5.2f%% ${value}]"
     flush stdout
     if {[isrunning $fspid]} {
-       catch {exec -- df --block-size 1 $loopdev | tail -1} output
-       set value [expr {[lindex $output 2]/$fsize}]
-       set value [expr {$lsize/$fsize}]
+       set lsize [get_total_used $id2dev]
+       set value [expr {100.*$lsize/$fsize}]
        set value [expr {max($value,$pvalue)}]
        set value [expr {min(${value},99.99)}]
     } else {
@@ -177,24 +201,24 @@ proc copyout_pbar {delay fsize loopdev fspid {value 0}} {
     if {$value >= 100.0} {
         puts -nonewline [format "\rProgress : \[%${bar_size}s\] DONE." {}]
         flush stdout
-    	set copyout_done done
-    	return
+        set copyout_done done
+        return
     }
-    after $delay [list copyout_pbar $delay $fsize $loopdev $fspid $value]
+    after $delay [list copyout_pbar $delay $fsize $id2dev $fspid $value]
 }
 
 proc get_disk_part_list {} {
-	# Returns list of restorable disks and partitions
-	# - A partition is only restorable if it is not mounted
-	# - A disk is only restorable if one of the following is true:
-	#    1. it has no partitions and it isn't mounted
-	#    2. it has more than one restorable partition
-	
-	# lsblk filter set here will not list mounted partitions or disks, but, it will
-	# list disks that have mounted partitions..
-	set filter {lsblk --filter 'MOUNTPOINT !~ "/"' }
-	append filter {--inverse --nodeps --noempty --list --exclude 7,9,11 --noheadings }
-	append filter {-o NAME,SIZE,TYPE,FSTYPE,TRAN,PARTTYPENAME,LABEL}
+    # Returns list of restorable disks and partitions
+    # - A partition is only restorable if it is not mounted
+    # - A disk is only restorable if one of the following is true:
+    #    1. it has no partitions and it isn't mounted
+    #    2. it has more than one restorable partition
+    
+    # lsblk filter set here will not list mounted partitions or disks, but, it will
+    # list disks that have mounted partitions..
+    set filter {lsblk --filter 'MOUNTPOINT !~ "/"' }
+    append filter {--inverse --nodeps --noempty --list --exclude 7,9,11 --noheadings }
+    append filter {-o NAME,SIZE,TYPE,FSTYPE,TRAN,PARTTYPENAME,LABEL}
     catch {exec -- bash -c $filter} lsblk
     set lsblk [split $lsblk \n]
     set l1 [lsort -unique [lsearch -regexp -all -inline $lsblk disk]]
@@ -215,17 +239,17 @@ proc get_disk_part_list {} {
           lappend l1n $l1e
        }          
     }
-	set lsblk [concat $l1n $l2]
+    set lsblk [concat $l1n $l2]
 
 }
 
 proc get_disk_part_dialog {fsa} {
     # Presents radiolist dialog of disks and partitions to restore to
-	global configdir env
-	# Include only standard storage devices for now (e.g. disks, usb, nvme).
-	set lsblk [get_disk_part_list]
+    global configdir env
+    # Include only standard storage devices for now (e.g. disks, usb, nvme).
+    set lsblk [get_disk_part_list]
     for {set ii 1} {$ii <= [llength $lsblk]} {incr ii} {
-    	lappend items [subst {$ii "[lindex $lsblk $ii-1]" off}]
+        lappend items [subst {$ii "[lindex $lsblk $ii-1]" off}]
     }
     # Present disks at the top (and partitions at the bottom) of the dialog
     #    Can only select one item, if it is a disk then all partitions of the disk can be
@@ -239,9 +263,9 @@ proc get_disk_part_dialog {fsa} {
     file tempfile tmpfile
     set istat [catch {exec bash -c $dcom 2>$tmpfile} choice]
     if {[string is digit -strict $choice]} {
-    	set dev [lindex [lindex $lsblk [incr choice -1]] 0]
-    	set devt [lindex [lindex $lsblk ${choice}] 2]
-    	return [list $dev $devt]
+        set dev [lindex [lindex $lsblk [incr choice -1]] 0]
+        set devt [lindex [lindex $lsblk ${choice}] 2]
+        return [list $dev $devt]
     }
     return
 }
@@ -257,8 +281,8 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     
     # Create unselected entries for each fsarchive id
     for {set ii 0} {$ii < [getfscount $archinfo]} {incr ii} {
-    	set fstype [getfstype $ii $archinfo]
-    	lappend items [subst {id=$ii "id=$ii $fstype" off}]
+        set fstype [getfstype $ii $archinfo]
+        lappend items [subst {id=$ii "id=$ii $fstype" off}]
     }
     # Get device info to populate information text at the top of the dialog and
     # a simple list of the device and partitions it may contain
@@ -267,27 +291,27 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     # Insert enough "skip" items as the number of partitions minus one.
     set nchoice 1
     if {[string match $device_type disk]} {
-    	if {[llength $devlist] > 1} {
-    	    set devlist [lrange $devlist 1 end]
-    	    set ndev [llength $devlist]
-    		if {$ndev > 1} {
-    			foreach part [lrange $devlist 1 end] {
-    				lappend items {"skip" "-- skip partition --" off}
-    			}
-    			set nchoice "1 - $ndev"
-    		}
-    	}
+        if {[llength $devlist] > 1} {
+            set devlist [lrange $devlist 1 end]
+            set ndev [llength $devlist]
+            if {$ndev > 1} {
+                foreach part [lrange $devlist 1 end] {
+                    lappend items {"skip" "-- skip partition --" off}
+                }
+                set nchoice "1 - $ndev"
+            }
+        }
     }
     # Populate a dialog command with the information from the lists: devinfo and items
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restore (${device})" }
     set dcom [subst $dcom]
     append dcom {--title "Select items to map to partitions" --separate-output --reorder --buildlist }
     foreach line [split $devinfo \n] {
-    	append dcom [subst {"${line}\\n"}]
+        append dcom [subst {"${line}\\n"}]
     }
     append dcom [subst {"\\nChoose $nchoice item}]
     if {[string length $nchoice] > 1} {
-    	append dcom {(s) in desired order}
+        append dcom {(s) in desired order}
     }
     append dcom {:" }
     append dcom {0 0 0 }
@@ -314,24 +338,12 @@ proc final_restfs_checkpoint_and_go_ahead {archinfo buildlist} {
     append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 0 0 }]
     set env(DIALOGRC) ${configdir}/autumndc.rc
     set istat [catch {exec -- bash -c $dcom} output]
-    set yesno "Go"
     if {$istat == 1} {
-       set yesno "Stop"
-       return
+       # Stop
+       return 0
     }
-    puts "istat: $istat"
-    puts "yesno: $yesno"
-    return
-    set fsize [getrestoresize $fsaid $archinfo]
-    # Start up restfs and a progress bar
-    catch {exec -- fsarchiver -x -j$nthr restfs $fsa $buildlist 2>@1 &} fspid
-    # Todo - I'm going to use a dialog gauge for this as fsarchiver runs faster with multiple ids 
-    #   vs several single sequential fsarchivers.. But, I'm also considering changing the copyout 
-    #   progressbar to a dialog gauge as well, I like the functionality+look better. Even though 
-    #   it's heavier weight (it is still TUI).
-    
-    # copyout_pbar 62 $fsize $buildlist $fspid
-    # vwait copyout_done
+    # Go
+    return 1
 }
 
 # Start of main script logic
@@ -400,34 +412,34 @@ switch $cmd {
         # (backing store files are premade via fallocate (or dd) and mkfs). For example,
         # see: https://linuxconfig.org/how-to-create-a-file-based-filesystem-using-dd-command-on-linux
         # (In this version, there are 3 backing store files: e.g. c200_{btrfs,ext4,vfat}.img)
-        
         set fsys [getstoretype [getfstype $fsaid $archinfo]]        
         catch {exec -- losetup --find --show ${backfsdir}/${backfstag}_$fsys.img} loopdev
         set label [getcreatedate $archinfo]
         set uuid [exec -- uuidgen --random]
-        set fsize [getrestoresize $fsaid $archinfo]
+        set id2dev "id=$fsaid,dest=$loopdev"
+        set fsize [get_id_total_fsize $id2dev $archinfo]
         # Start up restfs and a progress bar
-        catch {exec -- fsarchiver -x -j$nthr restfs $fsa id=$fsaid,dest=$loopdev,label=$label,uuid=$uuid 2>@1 &} fspid
-        copyout_pbar 62 $fsize $loopdev $fspid
+        catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}] fspid
+        copyout_pbar 62 $fsize $id2dev $fspid
         vwait copyout_done
         exit
     }
     "mount" {
         # mounts backingstore files that have been modified in the last hour
         foreach fsys {ext4 btrfs vfat} {
-           	set msec [expr [clock seconds] - [file mtime ${backfsdir}/${backfstag}_${fsys}.img]]
-           	if {$msec < 3600} {
-              	mount_backfile "${backfsdir}/${backfstag}_${fsys}.img"
-           	}
+            set msec [expr [clock seconds] - [file mtime ${backfsdir}/${backfstag}_${fsys}.img]]
+            if {$msec < 3600} {
+                mount_backfile "${backfsdir}/${backfstag}_${fsys}.img"
+            }
         }
-    	exit
+        exit
     }
     "mountall" {
         # mounts all backingstore files
         foreach fsys {ext4 btrfs vfat} {
             mount_backfile "${backfsdir}/${backfstag}_${fsys}.img"
         }
-    	exit
+        exit
     }
     "unmount" {
         # unmounts all backingstore files, frees up corresponding loop devices
@@ -435,20 +447,20 @@ switch $cmd {
             # Not sure why 2 times is necessary, even for multi mounts, but,
             # since it isn't expensive or problematic, I won't both with
             # looking into it for now.
-    		foreach fsys {ext4 btrfs vfat} {
-        		detach_backfile "${backfsdir}/${backfstag}_${fsys}.img"
-    		}
-    		catch {exec losetup --list} out
-    	}
+            foreach fsys {ext4 btrfs vfat} {
+                detach_backfile "${backfsdir}/${backfstag}_${fsys}.img"
+            }
+            catch {exec losetup --list} out
+        }
         puts "\n$out"
-    	exit
+        exit
     }
     "config" {
         puts "fsarchiver.tcl configuration:"
         puts "   configuration directory: ${configdir}"
-    	puts "   backing store directory: ${backfsdir}"
-    	puts "   mountpoint head: ${mountfsdir}"
-    	puts "   number of threads: ${nthr}"
+        puts "   backing store directory: ${backfsdir}"
+        puts "   mountpoint head: ${mountfsdir}"
+        puts "   number of threads: ${nthr}"
         exit
     }
     "restfs" {
@@ -459,11 +471,17 @@ switch $cmd {
         #  a simple partition)
         lassign [get_disk_part_dialog $fsa] dev devt
         if {[string length $devt] > 0} {        
-        	set buildlist [get_archive_restore_buildlist_dialog $archinfo $dev $devt]
-        	# puts "buildlist: $buildlist"
-        	# buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
-        	# list element.
-        	final_restfs_checkpoint_and_go_ahead $archinfo $buildlist
+            set buildlist [get_archive_restore_buildlist_dialog $archinfo $dev $devt]
+            # puts "buildlist: $buildlist"
+            # buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
+            # list element.
+            if {[final_restfs_checkpoint_and_go_ahead $archinfo $buildlist]} {
+                set fsize get_id_total_fsize {buildlist archinfo}
+                # Start up restfs and a progress bar
+                catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $buildlist 2>@1 &}] fspid
+                copyout_pbar 62 $fsize $buildlist $fspid
+                vwait copyout_done
+            }
         } else {
             puts "No unmounted disks or partitions available"
         }
