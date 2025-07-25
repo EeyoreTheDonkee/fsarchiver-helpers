@@ -147,8 +147,8 @@ proc mount_backfile {fname} {
 }
 
 proc isrunning {fspid} {
-    catch {exec -- pidstat -p $fspid} output
-    return [expr {[llength [split $output \n]] > 3}]
+    catch {exec -- ps $fspid} output
+    return [expr {[llength [split $output \n]] > 1}]
 }
 
 proc get_id_total_fsize {id2dev archinfo} {
@@ -161,6 +161,22 @@ proc get_id_total_fsize {id2dev archinfo} {
        lappend sum [getrestoresize $fsaid $archinfo]
     }
     return [expr [join $sum +]]
+}
+
+proc id2dev_ismounted {id2dev} {
+    # Test if any of the destinations are mounted
+    # Typically used when fsarchiver has been kicked off
+    # (i.e. fsarchiver mounts the destination fs before
+    #  doing a restfs)
+    foreach el $id2dev {
+       set idndev [split $el ,]
+       scan [lindex $idndev 1] "dest=%s" destfs
+       catch {exec -- df --block-size 1 $destfs | tail -1} output
+       if {[string compare [lindex $output end] "/dev"] != 0} {
+          return 1
+       }
+    }
+    return 0
 }
 
 proc get_total_used {id2dev} {
@@ -205,6 +221,46 @@ proc copyout_pbar {delay fsize id2dev fspid {value 0}} {
         return
     }
     after $delay [list copyout_pbar $delay $fsize $id2dev $fspid $value]
+}
+
+proc restfs_pbar {fsa delay fsize id2dev fspid} {
+    # Display a dialog gauge for fsarchiver restfs
+    global configdir env
+    set pvalue 0
+    set env(DIALOGRC) ${configdir}/autumndc.rc
+    # Set up dialog gauge command
+    set dcom {|dialog --output-fd 1 --erase-on-exit }
+    append dcom [subst {--backtitle "FSArchiver restfs $fsa" }]
+    append dcom [subst {--keep-tite --gauge "Execute:\n    fsarchiver restfs $id2dev" 16 80 0 }]  
+    # Start up the dialog gauge
+    set fd3 [open $dcom r+]
+    # Loop until fsarchiver is done
+    set ii 1
+    while {[id2dev_ismounted $id2dev] == 0} {
+       after $delay
+   	   puts $fd3 "0\nXXX\nWaiting for FSarchiver startup ($ii)\nXXX"
+   	   flush $fd3
+   	   incr ii 
+    }
+    while {[id2dev_ismounted $id2dev]} {
+       after $delay
+       set lsize [get_total_used $id2dev]
+       set value [expr {100.*$lsize/$fsize}]
+       set value [expr {max($value,$pvalue)}]
+       set value [expr {min(${value},99.0)}]
+       set dvalue [expr {round(${value})}]
+       if {$dvalue < 0 || $dvalue > 99} {continue}
+   	   puts $fd3 "${dvalue}"
+   	   puts $fd3 "XXX"
+   	   puts $fd3 "$dvalue"
+   	   puts $fd3 "Progress: ${lsize} of ${fsize} bytes ([format %.2f%% ${value}])"
+   	   puts $fd3 "XXX"
+   	   flush $fd3 
+   	   set pvalue $value   
+    }
+    close $fd3
+    # FSArchiver spends a lot of time compiling statistics it seems..
+    catch {exec -- kill -9 $fspid} output
 }
 
 proc get_disk_part_list {} {
@@ -257,7 +313,7 @@ proc get_disk_part_dialog {fsa} {
     #    can be restored (to).
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs $fsa" }
     set dcom [subst $dcom]
-    append dcom {--keep-tite --radiolist "Select disk or partition:" 0 0 0 }
+    append dcom {--keep-tite --radiolist "Select disk or partition:" 16 60 0 }
     catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
@@ -314,7 +370,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
         append dcom {(s) in desired order}
     }
     append dcom {:" }
-    append dcom {0 0 0 }
+    append dcom {60 80 0 }
     catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
@@ -335,7 +391,7 @@ proc final_restfs_checkpoint_and_go_ahead {archinfo buildlist} {
     global configdir nthr env
     set dcom {dialog --no-label "Stop" --yes-label "Go" --default-button "no" --title "Final checkpoint, go ahead?" }
     append dcom {--output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs" }
-    append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 0 0 }]
+    append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 16 60 }]
     set env(DIALOGRC) ${configdir}/autumndc.rc
     set istat [catch {exec -- bash -c $dcom} output]
     if {$istat == 1} {
@@ -472,15 +528,14 @@ switch $cmd {
         lassign [get_disk_part_dialog $fsa] dev devt
         if {[string length $devt] > 0} {        
             set buildlist [get_archive_restore_buildlist_dialog $archinfo $dev $devt]
-            # puts "buildlist: $buildlist"
             # buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
             # list element.
             if {[final_restfs_checkpoint_and_go_ahead $archinfo $buildlist]} {
-                set fsize get_id_total_fsize {buildlist archinfo}
+                set fsize [get_id_total_fsize $buildlist $archinfo]
                 # Start up restfs and a progress bar
-                catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $buildlist 2>@1 &}] fspid
-                copyout_pbar 62 $fsize $buildlist $fspid
-                vwait copyout_done
+                catch [subst {exec -- fsarchiver -j$nthr restfs $fsa $buildlist 2>@1 &}] fspid
+                restfs_pbar $fsa 248 $fsize $buildlist $fspid
+                exit
             }
         } else {
             puts "No unmounted disks or partitions available"
