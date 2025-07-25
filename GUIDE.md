@@ -94,6 +94,9 @@ fsarchiver mount backstores
 + Navigate to the mount point and the filesystem should be displayed in the mc panel. It is a fully restored filesystem. The only difference (effectively) is that it is contained in a backingstore file instead of a partition.
 + All normal directory, file activities can now be performed on the mounted backingstore e.g. selection of files, inspections, copies, deletes, edits, etc.
 
+> [!NOTE]
+> It is currently useful to use the unmount operator before using copyout. This will free up aborted sessions and/or unused loop devices.
+
 [toc](GUIDE.md#toc)
 
 ## How to restore filesystems from an archive
