@@ -68,8 +68,7 @@ Typical usage with mc is to start up mc via:
 	  - **backfstag** - backing store file/container prefix (e.g. c200)
       - **mountfsdir** - mount point head directory (e.g. /media/root)
       - **nthr** - number of fsarchiver compression threads (e.g. 8)
-    - (suggestion: put backfsdir on the fastest storage device possible as this will speed up copyout operators) \  
-\  
+    - (suggestion: put backfsdir on the fastest storage device possible as this will speed up copyout operators)
  
 + Run the install.sh script
 
