@@ -7,7 +7,7 @@
 
 
 > [!IMPORTANT]
-> fsarchiver-helpers requires a _local_ .mc.menu file in the directory where the fsarchiver archive(s) to be operated on reside(s)
+> fsarchiver-helpers requires a _local_ .mc.menu file in the directory where the fsarchiver archive(s) to be operated on reside(s) i.e. see [Installation](README.md#creating-an-fsarchiver-mc-local-menu)
 
 ---
 
@@ -25,7 +25,7 @@
 - Colors of fsarchiver-helpers are configurable by changing the suggested skin color of mc and/or deleting/changing the autumndc.rc file in configdir
 
 > [!IMPORTANT] 
-> the reason for the default sharp colors is to remind the user (of fsarchiver-helpers) that credentials _have been elevated_)
+> the reason for the default sharp colors is to remind the user (of fsarchiver-helpers) that credentials _have been elevated_
 
 [toc](GUIDE.md#toc)
 

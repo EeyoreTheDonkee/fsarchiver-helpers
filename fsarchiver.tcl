@@ -391,7 +391,7 @@ proc final_restfs_checkpoint_and_go_ahead {archinfo buildlist} {
     global configdir nthr env
     set dcom {dialog --no-label "Stop" --yes-label "Go" --default-button "no" --title "Final checkpoint, go ahead?" }
     append dcom {--output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs" }
-    append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 16 60 }]
+    append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 16 80 }]
     set env(DIALOGRC) ${configdir}/autumndc.rc
     set istat [catch {exec -- bash -c $dcom} output]
     if {$istat == 1} {
