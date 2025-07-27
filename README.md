@@ -68,7 +68,6 @@ Typical usage with mc is to start up mc via:
 	  - **backfstag** - backing store file/container prefix (e.g. c200)
       - **mountfsdir** - mount point head directory (e.g. /media/root)
       - **nthr** - number of fsarchiver compression threads (e.g. 8)
-    - (suggestion: put backfsdir on the fastest storage device possible as this will speed up copyout operators)
  
 + Run the install.sh script
 
@@ -89,16 +88,18 @@ fsarchiver.tcl mclocalmenu %d
 
 + To test installation of .mc.menu keypress F2 (and the fsarchiver menu should display)
 
-## Conventions/suggestions
-   - FSArchiver archives should be given a consistent suffix (e.g. .fsa)
+## Conventions, suggestions, notes
+   - Set backfsdir to the fastest storage device possible as this will speed up copyout operators
+   - naming conventions for FSArchiver archives
+     - consistency and helpful names & directories that provide a queue to content is suggested
+     - FSArchiver archives should be given a consistent suffix (e.g. .fsa)
    - The naming convention for the backingstore files (bsf) serves only as a queue to content
      - fsarchiver.tcl will inspect the file system type associated with an id in a backup file. Effectively, btrfs file system backups will be copied to the btrfs bsf, while filesytem types that contain the string "fat" will be copied to  the vfat bsf and everything else will be copied to the ext4 bsf e.g. c200_ext4.img. Since fsarchiver will actually format the bsf according to the filesystem type stored in the backup, the naming convention has no functional effect.
    - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
      - when done - selecting the “other” panel in mc will reset the mc command line
-   - (TBW) using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps on multiple systems
-   - naming conventions for fsarchive archives
-     - consistency and helpful names & directories that provide a queue to content is suggested
-   - Combining mc with [konsole](https://konsole.kde.org) shortcuts or [qterminal](https://github.com/lxqt/qterminal) bookmarks
-   - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
+   - TBW 
+     - using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps on multiple systems
+     - Combining mc with [konsole](https://konsole.kde.org) shortcuts or [qterminal](https://github.com/lxqt/qterminal) bookmarks
+     - Combining [tmux](https://github.com/tmux/tmux/wiki) with mc
    
 

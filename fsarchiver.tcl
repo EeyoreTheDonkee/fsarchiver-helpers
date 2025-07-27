@@ -235,13 +235,19 @@ proc restfs_pbar {fsa delay fsize id2dev fspid} {
     # Start up the dialog gauge
     set fd3 [open $dcom r+]
     # Loop until fsarchiver is done
-    set ii 1
+    set iwait 1
     while {[id2dev_ismounted $id2dev] == 0} {
        after $delay
-   	   puts $fd3 "0\nXXX\nWaiting for FSarchiver startup ($ii)\nXXX"
-   	   flush $fd3
-   	   incr ii 
+       puts $fd3 "0\nXXX\nWaiting for FSarchiver startup ($iwait)\nXXX"
+       flush $fd3
+       incr iwait 
+       if {$iwait > 19} {break}
     }
+    if {$iwait > 19} {
+		close $fd3
+		catch {exec -- kill -9 $fspid} output
+		return
+	}
     while {[id2dev_ismounted $id2dev]} {
        after $delay
        set lsize [get_total_used $id2dev]
@@ -250,16 +256,14 @@ proc restfs_pbar {fsa delay fsize id2dev fspid} {
        set value [expr {min(${value},99.0)}]
        set dvalue [expr {round(${value})}]
        if {$dvalue < 0 || $dvalue > 99} {continue}
-   	   puts $fd3 "${dvalue}"
-   	   puts $fd3 "XXX"
-   	   puts $fd3 "$dvalue"
-   	   puts $fd3 "Progress: ${lsize} of ${fsize} bytes ([format %.2f%% ${value}])"
-   	   puts $fd3 "XXX"
-   	   flush $fd3 
-   	   set pvalue $value   
+       puts $fd3 "${dvalue}\nXXX\n${dvalue}"
+       puts $fd3 "Progress: ${lsize} of ${fsize} bytes ([format %.2f%% ${value}])"
+       puts $fd3 "XXX"
+       flush $fd3 
+       set pvalue $value   
     }
     close $fd3
-    # FSArchiver spends a lot of time compiling statistics it seems..
+    # FSArchiver spends a lot of time compiling statistics it seems, so kill it.
     catch {exec -- kill -9 $fspid} output
 }
 
@@ -313,7 +317,7 @@ proc get_disk_part_dialog {fsa} {
     #    can be restored (to).
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs $fsa" }
     set dcom [subst $dcom]
-    append dcom {--keep-tite --radiolist "Select disk or partition:" 16 60 0 }
+    append dcom {--keep-tite --radiolist "Select disk or partition:" 16 100 0 }
     catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
@@ -354,14 +358,15 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
                 foreach part [lrange $devlist 1 end] {
                     lappend items {"skip" "-- skip partition --" off}
                 }
-                set nchoice "1 - $ndev"
+                set nchoice "1 - $ndev (MAX)"
             }
         }
     }
     # Populate a dialog command with the information from the lists: devinfo and items
-    set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restore (${device})" }
-    set dcom [subst $dcom]
-    append dcom {--title "Select items to map to partitions" --separate-output --reorder --buildlist }
+    set dcom {dialog --output-fd 1 --erase-on-exit --backtitle }
+    append dcom [subst {"FSArchiver restore (${device})" }]
+    append dcom {--title "Select items to map to partitions" }
+    append dcom {--separate-output --reorder --buildlist }
     foreach line [split $devinfo \n] {
         append dcom [subst {"${line}\\n"}]
     }
@@ -370,28 +375,37 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
         append dcom {(s) in desired order}
     }
     append dcom {:" }
-    append dcom {60 80 0 }
+    append dcom { 0 80 20 }
     catch {append dcom [join $items " "]}
     set env(DIALOGRC) ${configdir}/autumndc.rc
     file tempfile tmpfile
     # Execute the dialog command and it will return buildlist
     set istat [catch {exec bash -c $dcom 2>$tmpfile} buildlist]
     if {$istat == 0} {
-       set id2dev {}
-       foreach idfsa $buildlist dev $devlist {
-          if {[string match $idfsa skip] || [string match $idfsa {}]} {continue}
-          lappend id2dev $idfsa,dest=/dev/$dev
-       } 
-       return $id2dev
+        set nmax [llength $devlist]
+        set buildlist [lrange $buildlist 0 ${nmax}-1]
+        set id2dev {}
+        foreach idfsa $buildlist dev $devlist {
+            if {[string match $idfsa skip] || [string match $idfsa {}]} {continue}
+            lappend id2dev $idfsa,dest=/dev/$dev
+        } 
+        return $id2dev
     }
     return
 }
 
 proc final_restfs_checkpoint_and_go_ahead {archinfo buildlist} {
     global configdir nthr env
-    set dcom {dialog --no-label "Stop" --yes-label "Go" --default-button "no" --title "Final checkpoint, go ahead?" }
+    set msg    {"Execute:\n\n }
+    append msg { \\Zb\\Z1fsarchiver restfs $buildlist\\Zn\n\n }
+    append msg {    -Please check that the \\Zb\\Z1dest=\\Zn parts make sense\n }
+    append msg {    -For example, there can only be as many dest= as there }
+    append msg { are partitions on a device"}
+    set msg [subst $msg]
+    set dcom {dialog --no-label "Stop" --yes-label "Go" --default-button "no" }
+    append dcom {--colors --title "Final checkpoint, go ahead?" }
     append dcom {--output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs" }
-    append dcom [subst {--keep-tite --yesno "Execute:\n    fsarchiver restfs $buildlist" 16 80 }]
+    append dcom [subst {--keep-tite --yesno $msg 16 80 }]
     set env(DIALOGRC) ${configdir}/autumndc.rc
     set istat [catch {exec -- bash -c $dcom} output]
     if {$istat == 1} {
@@ -528,13 +542,24 @@ switch $cmd {
         lassign [get_disk_part_dialog $fsa] dev devt
         if {[string length $devt] > 0} {        
             set buildlist [get_archive_restore_buildlist_dialog $archinfo $dev $devt]
+            if {[llength $buildlist] < 1} {
+            	exit
+            }
             # buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
             # list element.
             if {[final_restfs_checkpoint_and_go_ahead $archinfo $buildlist]} {
                 set fsize [get_id_total_fsize $buildlist $archinfo]
                 # Start up restfs and a progress bar
-                catch [subst {exec -- fsarchiver -j$nthr restfs $fsa $buildlist 2>@1 &}] fspid
-                restfs_pbar $fsa 248 $fsize $buildlist $fspid
+                set fscom [subst {exec -- fsarchiver -j$nthr restfs $fsa $buildlist 2>@1 &}]
+                catch $fscom fspid istat
+                after 2000
+                if {[string is digit $fspid] && [isrunning $fspid]} {
+                   restfs_pbar $fsa 250 $fsize $buildlist $fspid
+                } else {
+                   puts "\n\nERROR: wasn't able to start fsarchiver"
+                   puts "(Check that partitions are large enough for id(s))"
+                   exit 1
+                }
                 exit
             }
         } else {
