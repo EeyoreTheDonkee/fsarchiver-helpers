@@ -232,23 +232,26 @@ proc restfs_pbar {fsa delay fsize id2dev fspid} {
     set dcom {|dialog --output-fd 1 --erase-on-exit }
     append dcom [subst {--backtitle "FSArchiver restfs $fsa" }]
     append dcom [subst {--keep-tite --gauge "Execute:\n    fsarchiver restfs $id2dev" 16 80 0 }]  
-    # Start up the dialog gauge
-    set fd3 [open $dcom r+]
-    # Loop until fsarchiver is done
+    # Make sure that fsarchiver is running
     set iwait 1
     while {[id2dev_ismounted $id2dev] == 0} {
-       after $delay
-       puts $fd3 "0\nXXX\nWaiting for FSarchiver startup ($iwait)\nXXX"
-       flush $fd3
-       incr iwait 
-       if {$iwait > 19} {break}
+        after $delay 
+        if {$iwait > 19} {
+            # This seems to be the easiest way to preserve stderr as
+            # (e.g.) a dialog will cover it up or garble it..       		
+            puts "\n\nERROR: wasn't able to start fsarchiver - see stderr"
+            puts "(e.g. Check that partitions are large enough for id(s))"
+            flush stdout
+            catch {exec -- kill -9 $fspid} output
+            after 5000
+            return
+        }
+        incr iwait       		
     }
-    if {$iwait > 19} {
-		close $fd3
-		catch {exec -- kill -9 $fspid} output
-		return
-	}
+    # Start up the dialog gauge
+    set fd3 [open $dcom r+]
     while {[id2dev_ismounted $id2dev]} {
+       # Loop until done
        after $delay
        set lsize [get_total_used $id2dev]
        set value [expr {100.*$lsize/$fsize}]
@@ -263,7 +266,7 @@ proc restfs_pbar {fsa delay fsize id2dev fspid} {
        set pvalue $value   
     }
     close $fd3
-    # FSArchiver spends a lot of time compiling statistics it seems, so kill it.
+    # FSArchiver spends a lot of time compiling statistics it seems.. so kill it.
     catch {exec -- kill -9 $fspid} output
 }
 
@@ -552,13 +555,14 @@ switch $cmd {
                 # Start up restfs and a progress bar
                 set fscom [subst {exec -- fsarchiver -j$nthr restfs $fsa $buildlist 2>@1 &}]
                 catch $fscom fspid istat
-                after 2000
-                if {[string is digit $fspid] && [isrunning $fspid]} {
+                if {[string is digit $fspid] && [isrunning $fspid]} {                   
                    restfs_pbar $fsa 250 $fsize $buildlist $fspid
                 } else {
                    puts "\n\nERROR: wasn't able to start fsarchiver"
-                   puts "(Check that partitions are large enough for id(s))"
-                   exit 1
+                   puts "result: $fspid"
+                   foreach key [dict keys $istat] {
+                      puts "$key - [dict get $istat $key]"
+                   }
                 }
                 exit
             }
