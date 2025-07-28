@@ -192,6 +192,26 @@ proc get_total_used {id2dev} {
     return [expr [join $sum +]]
 }
 
+proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
+    # Make sure that fsarchiver is running
+    set iwait 1
+    while {[id2dev_ismounted $id2dev] == 0} {
+        after $delay 
+        if {$iwait > 19} {
+            # This seems to be the easiest way to preserve stderr as
+            # (e.g.) a dialog will cover it up or garble it..       		
+            puts "\n\nERROR: wasn't able to start fsarchiver - see stderr"
+            puts "(e.g. Check that partitions are large enough for id(s))"
+            flush stdout
+            catch {exec -- kill -9 $fspid} output
+            after 5000
+            return 1
+        }
+        incr iwait       		
+    }
+    return 0
+}
+
 proc copyout_pbar {delay fsize id2dev fspid {value 0}} {
     # writes a tui progress bar to mc command line
     global copyout_done
@@ -206,7 +226,7 @@ proc copyout_pbar {delay fsize id2dev fspid {value 0}} {
     # output the bar
     puts -nonewline "\rProgress: \[${done_sub_bar}${todo_sub_bar}\] [format %5.2f%% ${value}]"
     flush stdout
-    if {[isrunning $fspid]} {
+    if {[id2dev_ismounted $id2dev]} {
        set lsize [get_total_used $id2dev]
        set value [expr {100.*$lsize/$fsize}]
        set value [expr {max($value,$pvalue)}]
@@ -233,20 +253,8 @@ proc restfs_pbar {fsa delay fsize id2dev fspid} {
     append dcom [subst {--backtitle "FSArchiver restfs $fsa" }]
     append dcom [subst {--keep-tite --gauge "Execute:\n    fsarchiver restfs $id2dev" 16 80 0 }]  
     # Make sure that fsarchiver is running
-    set iwait 1
-    while {[id2dev_ismounted $id2dev] == 0} {
-        after $delay 
-        if {$iwait > 19} {
-            # This seems to be the easiest way to preserve stderr as
-            # (e.g.) a dialog will cover it up or garble it..       		
-            puts "\n\nERROR: wasn't able to start fsarchiver - see stderr"
-            puts "(e.g. Check that partitions are large enough for id(s))"
-            flush stdout
-            catch {exec -- kill -9 $fspid} output
-            after 5000
-            return
-        }
-        incr iwait       		
+    if {[wait_for_fsarchiver_to_start $id2dev $delay $fspid]} {
+    	return
     }
     # Start up the dialog gauge
     set fd3 [open $dcom r+]
@@ -492,9 +500,19 @@ switch $cmd {
         set id2dev "id=$fsaid,dest=$loopdev"
         set fsize [get_id_total_fsize $id2dev $archinfo]
         # Start up restfs and a progress bar
-        catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}] fspid
-        copyout_pbar 62 $fsize $id2dev $fspid
-        vwait copyout_done
+        catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}] fspid istat
+        set delay 250
+        if {[wait_for_fsarchiver_to_start $id2dev $delay $fspid] == 0} {
+        	copyout_pbar $delay $fsize $id2dev $fspid
+        	vwait copyout_done
+        } else {
+        	set fd [open "debug.txt" w]
+        	puts $fd "return: $fspid"
+        	foreach k [dict keys $istat] {
+        		puts $fd "$k - [dict get $istat $k]"
+        	}
+        	close $fd
+        }
         exit
     }
     "mount" {
