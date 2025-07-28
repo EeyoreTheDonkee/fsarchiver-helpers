@@ -506,12 +506,11 @@ switch $cmd {
         	copyout_pbar $delay $fsize $id2dev $fspid
         	vwait copyout_done
         } else {
-        	set fd [open "debug.txt" w]
-        	puts $fd "return: $fspid"
-        	foreach k [dict keys $istat] {
-        		puts $fd "$k - [dict get $istat $k]"
+        	puts "\n\nERROR: wasn't able to start fsarchiver"
+        	puts "result: $fspid"
+        	foreach key [dict keys $istat] {
+            	puts "$key - [dict get $istat $key]"
         	}
-        	close $fd
         }
         exit
     }
