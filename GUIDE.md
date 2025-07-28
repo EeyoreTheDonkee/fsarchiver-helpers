@@ -119,7 +119,7 @@ fsarchiver restfs
 ![](images/mc_fshelp_disk_partition_dialog.png)
 
   - Disks are at the top of the list
-  - Selecting a disk will allow for multiple filesystem restorals (depending on the current partion layout of the disk and the contents of the archive)
+  - Selecting a disk will allow for multiple filesystem restorals (depending on the current partition layout of the disk and the contents of the archive)
 + _After_ selecting one of the disks or partitions (an asterisk will populate an items parenthesis), click on **OK**
 + A choice of archive ids will be presented in a buildlist dialog
 
