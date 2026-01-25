@@ -532,7 +532,6 @@ switch $cmd {
         set fscom [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}]
         catch $fscom fspid istat
         if {[string is digit $fspid] && [isrunning $fspid]} {
-            puts $fdebug "fspid: $fspid - starting up pbar"
             set delay 250                 
             fsa_pbar copyout $fsa $delay $fsize $id2dev $fspid
         } else {
