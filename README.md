@@ -41,6 +41,7 @@ Typical usage with mc is to start up mc via:
 
 ## Dependencies
 + elevated credentials
++ loop device capability (e.g. losetup must work, default in most kernel setups but I ran into an issue with Arch)
 + mc, FSArchiver, [tclsh](https://sourceforge.net/projects/tcl/files/) (version 9.0+ is recommended), [dialog](https://invisible-island.net/dialog/)
 + The user is expected to have intermediate facility with mc and FSArchiver.
 + Enough free space for 3 backingstore files (e.g. 3 * 200G = 600G)
@@ -53,7 +54,6 @@ Typical usage with mc is to start up mc via:
 
 ```bash 
     cd tcl/unix
-    autoconfig
     ./configure
     make install
 ```
