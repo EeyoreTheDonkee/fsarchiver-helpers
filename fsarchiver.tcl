@@ -147,8 +147,10 @@ proc mount_backfile {fname} {
 }
 
 proc isrunning {fspid} {
-    catch {exec -- ps $fspid} output
-    return [expr {[llength [split $output \n]] > 1}]
+    # TBD: use ::tcl::process for this.. (i.e. "ps" is always changing output behavior)
+    catch {exec -- ps $fspid} pout
+    if {[regexp -- defunct|abnormal $pout]} {return 0}
+    return [expr {[llength [split $pout \n]] > 1}]
 }
 
 proc get_id_total_fsize {id2dev archinfo} {
@@ -168,6 +170,7 @@ proc id2dev_ismounted {id2dev} {
     # Typically used when fsarchiver has been kicked off
     # (i.e. fsarchiver mounts the destination fs before
     #  doing a restfs)
+    # Returns true if loop device is mounted
     foreach el $id2dev {
        set idndev [split $el ,]
        scan [lindex $idndev 1] "dest=%s" destfs
@@ -196,6 +199,13 @@ proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
     # Make sure that fsarchiver is running
     set iwait 1
     while {[id2dev_ismounted $id2dev] == 0} {
+        if {$iwait < 2} {
+           puts "\n\nWaiting for fsarchiver to start writing"
+           flush stdout
+        } else {
+           puts -nonewline "."
+           flush stdout
+        }
         after $delay 
         if {$iwait > 19} {
             # This seems to be the easiest way to preserve stderr as
@@ -212,70 +222,88 @@ proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
     return 0
 }
 
-proc copyout_pbar {delay fsize id2dev fspid {value 0}} {
-    # writes a tui progress bar to mc command line
-    global copyout_done
-    set bar_size 40
-    set done [expr round($bar_size * $value / 100)]
-    set todo [expr $bar_size - $done]
-    # set fbox instead of \#
-    set fbox [format %c 0x2588]
-    set done_sub_bar [string repeat ${fbox} ${done}]
-    set todo_sub_bar [string repeat - ${todo}]
-    set pvalue $value
-    # output the bar
-    puts -nonewline "\rProgress: \[${done_sub_bar}${todo_sub_bar}\] [format %5.2f%% ${value}]"
-    flush stdout
-    if {[id2dev_ismounted $id2dev]} {
-       set lsize [get_total_used $id2dev]
-       set value [expr {100.*$lsize/$fsize}]
-       set value [expr {max($value,$pvalue)}]
-       set value [expr {min(${value},99.99)}]
-    } else {
-       set value 100.0
-    }
-    if {$value >= 100.0} {
-        puts -nonewline [format "\rProgress : \[%${bar_size}s\] DONE." {}]
-        flush stdout
-        set copyout_done done
-        return
-    }
-    after $delay [list copyout_pbar $delay $fsize $id2dev $fspid $value]
-}
-
-proc restfs_pbar {fsa delay fsize id2dev fspid} {
-    # Display a dialog gauge for fsarchiver restfs
-    global configdir env
+proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
+    # Display a dialog gauge for fsarchiver restfs. The current man page for exec describes
+    # using expect instead of tclsh for TUIs (which I obviously disagree with).
+    #
+    # i.e. " It is desirable to have console applications hidden and detached"
+    #
+    # There are two very good reasons for not using expect: 1. It isn't maintained, 2. It is overkill
+    # and introduces unnecessary failure possibilities.
+    #
+    
+    global configdir tclsh env
     set pvalue 0
     set env(DIALOGRC) ${configdir}/autumndc.rc
-    # Set up dialog gauge command
-    set dcom {|dialog --output-fd 1 --erase-on-exit }
-    append dcom [subst {--backtitle "FSArchiver restfs $fsa" }]
-    append dcom [subst {--keep-tite --gauge "Execute:\n    fsarchiver restfs $id2dev" 16 80 0 }]  
-    # Make sure that fsarchiver is running
-    if {[wait_for_fsarchiver_to_start $id2dev $delay $fspid]} {
+
+    # Make sure that fsarchiver is running 
+    set wdelay 2500
+    if {[wait_for_fsarchiver_to_start $id2dev $wdelay $fspid]} {
     	return
-    }
-    # Start up the dialog gauge
-    set fd3 [open $dcom r+]
-    while {[id2dev_ismounted $id2dev]} {
-       # Loop until done
-       after $delay
-       set lsize [get_total_used $id2dev]
-       set value [expr {100.*$lsize/$fsize}]
-       set value [expr {max($value,$pvalue)}]
-       set value [expr {min(${value},99.0)}]
-       set dvalue [expr {round(${value})}]
-       if {$dvalue < 0 || $dvalue > 99} {continue}
-       puts $fd3 "${dvalue}\nXXX\n${dvalue}"
-       puts $fd3 "Progress: ${lsize} of ${fsize} bytes ([format %.2f%% ${value}])"
-       puts $fd3 "XXX"
-       flush $fd3 
-       set pvalue $value   
-    }
+    }    
+    set fd3 [file tempfile fsa_gauge]
+    puts $fd3 [subst {#!$tclsh}]
+    puts -nonewline $fd3 [subst {proc id2dev_ismounted {[info args id2dev_ismounted]}}]
+    puts $fd3 " {"
+    puts $fd3 [info body id2dev_ismounted]
+    puts $fd3 " }"
+    
+    puts -nonewline $fd3 [subst {proc get_total_used {[info args get_total_used]}}]
+    puts $fd3 " {"
+    puts $fd3 [info body get_total_used]
+    puts $fd3 " }"
+    
+    puts $fd3 {global env}
+    puts $fd3 [subst {set env(DIALOGRC) ${configdir}/autumndc.rc}]
+    
+    puts $fd3 {set dcom {|dialog --erase-on-exit }}
+    puts $fd3 [subst {append dcom {--backtitle "FSArchiver $tag $fsa" }}]
+    puts $fd3 [subst -nobackslashes {append dcom {--gauge "Execute:\n    fsarchiver $tag $id2dev" 16 80 0 }}]  
+    
+    puts $fd3 [subst {set fsize $fsize}]
+    puts $fd3 {set pvalue 0}
+    puts $fd3 {set fd3 [open $dcom w]}
+    puts -nonewline $fd3 [subst -nocommands {while {[id2dev_ismounted $id2dev]}}]
+    puts $fd3 " {"      
+    puts $fd3 [subst {   after $delay}]
+    puts $fd3 [subst -nocommands {   set lsize [get_total_used $id2dev]}]
+    puts $fd3 {   set value [expr {100.*$lsize/$fsize}]}
+    puts $fd3 {   set value [expr {max($value,$pvalue)}]}
+    puts $fd3 {   set value [expr {min(${value},99.0)}]}
+    puts $fd3 {   set dvalue [expr {round(${value})}]}
+    puts $fd3 {   if {$dvalue < 0 || $dvalue > 99} {continue}}
+    puts $fd3 {   puts $fd3 "${dvalue}\nXXX\n${dvalue}"}
+    puts $fd3 {   puts $fd3 "Progress: ${lsize} of ${fsize} bytes ([format %.2f%% ${value}])"}
+    puts $fd3 {   puts $fd3 "XXX"}
+    puts $fd3 {  flush $fd3}
+    puts $fd3 {  set pvalue $value}  
+    puts $fd3 " }"
+    puts $fd3 {close $fd3}
+    puts $fd3 "catch {exec -- reset} istat out"
+    puts $fd3 [subst {file delete $fsa_gauge}]    
+    puts $fd3 [subst {catch {exec -- kill -15 $fspid} istat out}]
+    puts $fd3 {exit}
     close $fd3
-    # FSArchiver spends a lot of time compiling statistics it seems.. so kill it.
-    catch {exec -- kill -9 $fspid} output
+    
+    file attributes $fsa_gauge -permissions u+rwx
+    # Putting dialog gauge in the background seems to be the only way to get it to render proper consistently.
+    # Also, the parent tclsh when called from mc must be a child process and not a grandchild+. i.e. dialog
+    # must have access to the controlling shell (aka console as referred to currently 01/09/26 - I always 
+    # considered "console" to refer to the start up shell of the hardware on bootup. i.e. there is one and 
+    # only one console on any one machine - but, the usage of "console" has changed in software circles..)
+    catch {exec $fsa_gauge &} ggpid istat
+    while {[isrunning $fspid]} {
+       after 250
+    }
+    # fsarchiver process status now returns defunct because it's been forced to stop before issuing its
+    # statistical output (I'd like an fsarchiver switch for this - but, not likely to happen unless I submit
+    # a PR). However, defunct is good enough as the parent process can now be killed and the OS will 
+    # clean up.
+    while {[isrunning [pid]]} {
+    	catch {exec kill -9 [pid] &} istat out
+    	after 250
+    }
+    return
 }
 
 proc get_disk_part_list {} {
@@ -405,10 +433,10 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     return
 }
 
-proc final_restfs_checkpoint_and_go_ahead {archinfo buildlist} {
+proc final_restfs_checkpoint_and_go_ahead {fsa archinfo buildlist} {
     global configdir nthr env
     set msg    {"Execute:\n\n }
-    append msg { \\Zb\\Z1fsarchiver restfs $buildlist\\Zn\n\n }
+    append msg { \\Zb\\Z1fsarchiver restfs $fsa $buildlist\\Zn\n\n }
     append msg {    -Please check that the \\Zb\\Z1dest=\\Zn parts make sense\n }
     append msg {    -For example, there can only be as many dest= as there }
     append msg { are partitions on a device"}
@@ -492,19 +520,21 @@ switch $cmd {
         # Copy fsarchiver stored filesystem to backing store file
         # (backing store files are premade via fallocate (or dd) and mkfs). For example,
         # see: https://linuxconfig.org/how-to-create-a-file-based-filesystem-using-dd-command-on-linux
-        # (In this version, there are 3 backing store files: e.g. c200_{btrfs,ext4,vfat}.img)
+        # (In demo configuration, there are 3 backing store files: e.g. c200_{btrfs,ext4,vfat}.img)
         set fsys [getstoretype [getfstype $fsaid $archinfo]]        
         catch {exec -- losetup --find --show ${backfsdir}/${backfstag}_$fsys.img} loopdev
+        catch {exec -- losetup -c $loopdev} output istat
         set label [getcreatedate $archinfo]
         set uuid [exec -- uuidgen --random]
         set id2dev "id=$fsaid,dest=$loopdev"
         set fsize [get_id_total_fsize $id2dev $archinfo]
         # Start up restfs and a progress bar
-        catch [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}] fspid istat
-        set delay 250
-        if {[wait_for_fsarchiver_to_start $id2dev $delay $fspid] == 0} {
-        	copyout_pbar $delay $fsize $id2dev $fspid
-        	vwait copyout_done
+        set fscom [subst {exec -- fsarchiver -x -j$nthr restfs $fsa $id2dev,label=$label,uuid=$uuid 2>@1 &}]
+        catch $fscom fspid istat
+        if {[string is digit $fspid] && [isrunning $fspid]} {
+            puts $fdebug "fspid: $fspid - starting up pbar"
+            set delay 250                 
+            fsa_pbar copyout $fsa $delay $fsize $id2dev $fspid
         } else {
         	puts "\n\nERROR: wasn't able to start fsarchiver"
         	puts "result: $fspid"
@@ -567,13 +597,13 @@ switch $cmd {
             }
             # buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
             # list element.
-            if {[final_restfs_checkpoint_and_go_ahead $archinfo $buildlist]} {
+            if {[final_restfs_checkpoint_and_go_ahead $fsa $archinfo $buildlist]} {
                 set fsize [get_id_total_fsize $buildlist $archinfo]
                 # Start up restfs and a progress bar
                 set fscom [subst {exec -- fsarchiver -j$nthr restfs $fsa $buildlist 2>@1 &}]
                 catch $fscom fspid istat
                 if {[string is digit $fspid] && [isrunning $fspid]} {                   
-                   restfs_pbar $fsa 250 $fsize $buildlist $fspid
+                   fsa_pbar restfs $fsa 1000 $fsize $buildlist $fspid
                 } else {
                    puts "\n\nERROR: wasn't able to start fsarchiver"
                    puts "result: $fspid"
@@ -592,6 +622,6 @@ switch $cmd {
         file attributes $fsadir/.mc.menu -owner root -permissions 0644
     }
     default {
-       exit 1
+       return
     }
 }

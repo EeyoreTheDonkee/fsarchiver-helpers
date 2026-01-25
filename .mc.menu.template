@@ -31,15 +31,15 @@ shell_patterns=0
 
 + ! t t
 @       fsarchiver copyout id=1 (to backstore)
-    	( fsarchiver.tcl copyout 1 %f &)
+    	fsarchiver.tcl copyout 1 %f
 
 + ! t t
 @       fsarchiver copyout id=0 (to backstore)
-    	( fsarchiver.tcl copyout 0 %f &)
+    	fsarchiver.tcl copyout 0 %f
 
 + ! t t
 @       fsarchiver copyout id=n (to backstore)
-    	( fsarchiver.tcl copyout %{enter id:} %f &)
+    	fsarchiver.tcl copyout %{enter id:} %f
 
 @       fsarchiver mount backstores
     	%view{ascii} fsarchiver.tcl mount
