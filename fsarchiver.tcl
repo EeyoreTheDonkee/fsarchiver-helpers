@@ -292,8 +292,18 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     # considered "console" to refer to the start up shell of the hardware on bootup. i.e. there is one and 
     # only one console on any one machine - but, the usage of "console" has changed in software circles..)
     catch {exec $fsa_gauge &} ggpid istat
+    set iwait 1
     while {[isrunning $fspid]} {
        after 250
+       if {[isrunning $ggpid]} {continue}
+       if {$iwait < 2} {
+           puts "\n\nTerminating fsarchiver subprocess"
+           flush stdout
+        } else {
+           puts -nonewline "."
+           flush stdout
+        }
+        incr iwait
     }
     # fsarchiver process status now returns defunct because it's been forced to stop before issuing its
     # statistical output (I'd like an fsarchiver switch for this - but, not likely to happen unless I submit
