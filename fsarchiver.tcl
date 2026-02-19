@@ -170,7 +170,8 @@ proc id2dev_ismounted {id2dev} {
     # Typically used when fsarchiver has been kicked off
     # (i.e. fsarchiver mounts the destination fs before
     #  doing a restfs)
-    # Returns true if loop device is mounted
+    #
+    # Returns true if *any* of the id2dev loop device(s) is/are mounted
     foreach el $id2dev {
        set idndev [split $el ,]
        scan [lindex $idndev 1] "dest=%s" destfs
@@ -207,6 +208,12 @@ proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
            flush stdout
         }
         after $delay 
+    	# Check that fsarchiver is running
+    	if {[isrunning $fspid] == 0} {
+        	puts "\n\nfsarchiver is no longer running..\n"
+        	flush stdout
+        	return 1
+    	}
         if {$iwait > 19} {
             # This seems to be the easiest way to preserve stderr as
             # (e.g.) a dialog will cover it up or garble it..       		
