@@ -191,7 +191,16 @@ proc get_total_used {id2dev} {
        set idndev [split $el ,]
        scan [lindex $idndev 1] "dest=%s" destfs
        catch {exec -- df --block-size 1 $destfs | tail -1} output
-       lappend sum [lindex $output 2]
+       set asum [lindex $output 2]
+       if {$asum == 0} {
+           set istat [catch {exec -- fsck -M $destfs | tail -1} output]
+           if {$istat == 0} {
+               set fac 4096
+               set asum [lindex [split [lindex $output end-1] /] 0]
+               set asum [expr {$asum * $fac}]
+           }
+       }
+       lappend sum $asum
     }
     return [expr [join $sum +]]
 }
@@ -269,11 +278,12 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     
     puts $fd3 [subst {set fsize $fsize}]
     puts $fd3 {set pvalue 0}
+    puts $fd3 [subst {set id2dev {$id2dev}}]
     puts $fd3 {set fd3 [open $dcom w]}
-    puts -nonewline $fd3 [subst -nocommands {while {[id2dev_ismounted $id2dev]}}]
+    puts -nonewline $fd3 {while {[id2dev_ismounted $id2dev]}}
     puts $fd3 " {"      
     puts $fd3 [subst {   after $delay}]
-    puts $fd3 [subst -nocommands {   set lsize [get_total_used $id2dev]}]
+    puts $fd3 {   set lsize [get_total_used $id2dev]}
     puts $fd3 {   set value [expr {100.*$lsize/$fsize}]}
     puts $fd3 {   set value [expr {max($value,$pvalue)}]}
     puts $fd3 {   set value [expr {min(${value},99.0)}]}
@@ -288,7 +298,7 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     puts $fd3 {close $fd3}
     puts $fd3 "catch {exec -- reset} istat out"
     puts $fd3 [subst {file delete $fsa_gauge}]    
-    puts $fd3 [subst {catch {exec -- kill -15 $fspid} istat out}]
+    puts $fd3 [subst {catch {exec -- kill -9 $fspid} istat out}]
     puts $fd3 {exit}
     close $fd3
     
@@ -301,10 +311,10 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     catch {exec $fsa_gauge &} ggpid istat
     set iwait 1
     while {[isrunning $fspid]} {
-       after 250
+       after 500
        if {[isrunning $ggpid]} {continue}
        if {$iwait < 2} {
-           puts "\n\nTerminating fsarchiver subprocess"
+           puts "\n\nWaiting for parent fsarchiver to terminate.."
            flush stdout
         } else {
            puts -nonewline "."
@@ -418,7 +428,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
             }
         }
     }
-    # Populate a dialog command with the information from the lists: devinfo and items
+    # Populate a dialog buildlist with the information from the lists: devinfo and items
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle }
     append dcom [subst {"FSArchiver restore (${device})" }]
     append dcom {--title "Select items to map to partitions" }
