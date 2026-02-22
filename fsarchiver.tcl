@@ -252,7 +252,7 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     set pvalue 0
     set env(DIALOGRC) ${configdir}/autumndc.rc
 
-    # Make sure that fsarchiver is running 
+    # Start up dialog gauge when fsarchiver starts writing 
     set wdelay 2500
     if {[wait_for_fsarchiver_to_start $id2dev $wdelay $fspid]} {
     	return
@@ -482,6 +482,18 @@ proc final_restfs_checkpoint_and_go_ahead {fsa archinfo buildlist} {
     return 1
 }
 
+proc test_mcmenu {cwd} {
+    global configdir installmtime   
+    if {[info exists installmtime] && [string length $installmtime] > 0} {
+       if {[file mtime [file join $cwd .mc.menu]] < $installmtime} {
+           puts "\n\nERROR: [file join $cwd .mc.menu] obsolete"
+           puts "Please see [file join $configdir .mc.menu.template]"
+           puts "or run: fsarchiver.tcl mclocalmenu $cwd"
+           exit 1
+       }
+    }
+}
+
 # Start of main script logic
 # Usage:
 #    fsarchiver.tcl probe
@@ -492,7 +504,7 @@ proc final_restfs_checkpoint_and_go_ahead {fsa archinfo buildlist} {
 #    fsarchiver.tcl mountall
 #    fsarchiver.tcl config
 #    fsarchiver.tcl restfs archivename
-#    fsarchiver.tcl mclocalmenu
+#    fsarchiver.tcl mclocalmenu dir
 
 source .fsarchiver.rc.tcl
 
@@ -544,6 +556,7 @@ switch $cmd {
        exit
     }
     "copyout" {
+        test_mcmenu [pwd]
         # Copy fsarchiver stored filesystem to backing store file
         # (backing store files are premade via fallocate (or dd) and mkfs). For example,
         # see: https://linuxconfig.org/how-to-create-a-file-based-filesystem-using-dd-command-on-linux
@@ -610,6 +623,7 @@ switch $cmd {
         exit
     }
     "restfs" {
+    	test_mcmenu [pwd]
         # Regular FSArchiver filesystem restoral
         # Create dialog of disks and/or partitions to restore to
         # (currently raids aren't allowed but, I should look into this. I think
@@ -644,8 +658,10 @@ switch $cmd {
         }
     }
     "mclocalmenu" {
+        file delete -force $fsadir/.mc.menu
         file copy $configdir/.mc.menu.template $fsadir/.mc.menu
         file attributes $fsadir/.mc.menu -owner root -permissions 0644
+        file mtime $fsadir/.mc.menu $installmtime
     }
     default {
        return

@@ -1,4 +1,5 @@
 # Test for mc, fsarchiver and fallocate
+puts "Checking dependencies"
 foreach prog {mc fsarchiver fallocate} progdesc {{(Midnight Commander)} FSArchiver {}} {
 	set progpath [auto_execok $prog]
 	if {[string length $progpath] < 1} {
@@ -28,14 +29,21 @@ source .fsarchiver.rc.tcl
 #    mountfsdir - Copyout mount point head
 #    nthr - Number of compression threads
 
-# create configdir if it doesn't exist, and set its attributes
+# create configdir if it doesn't exist, set its attributes and populate it
+puts "Populating $configdir"
+file delete -force $configdir
 file mkdir $configdir
 file attributes $configdir -permissions 00644
-file copy -force .mc.menu.template .fsarchiver.rc.tcl autumndc.rc $configdir
+set fsarc [readFile .fsarchiver.rc.tcl]
+append fsarc "# Installation mtime for consistency checks\n"
+append fsarc "const installmtime [file mtime $configdir]\n"
+writeFile [file join $configdir .fsarchiver.rc.tcl] $fsarc
+file copy -force .mc.menu.template autumndc.rc $configdir
 
-# configure fsarchiver.tcl according to the rc.tcl file and set the attributes
+# configure fsarchiver.tcl according to the rc.tcl file and set the attributes 
 regsub -- {/usr/local/bin/tclsh9.0} [readFile fsarchiver.tcl] $tclsh fsahexec
 regsub -- {source .fsarchiver.rc.tcl} $fsahexec "source $configdir/.fsarchiver.rc.tcl" fsahexec
+puts "Installing fsarchiver.tcl in $fsadir"
 writeFile [file join $fsadir fsarchiver.tcl] $fsahexec
 file attributes [file join $fsadir fsarchiver.tcl] -permissions 00755
 
