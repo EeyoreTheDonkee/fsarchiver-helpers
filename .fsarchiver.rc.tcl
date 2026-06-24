@@ -2,6 +2,8 @@
 const tclsh /usr/local/bin/tclsh9.0
 # Configuration directory
 const configdir $env(HOME)/.config/fsarchiver-helpers
+# Dialog RC filename 
+const dialogrc autumndc.rc
 # Backing store directory
 const backfsdir /mnt/bees
 # Backing store size
