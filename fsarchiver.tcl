@@ -210,22 +210,22 @@ proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
     set iwait 1
     while {[id2dev_ismounted $id2dev] == 0} {
         if {$iwait < 2} {
-           puts "\n\nWaiting for fsarchiver to start writing"
+           puts "\n\nWaiting for fsarchiver (I/O thread) to start writing"
            flush stdout
         } else {
            puts -nonewline "."
            flush stdout
         }
         after $delay 
-    	# Check that fsarchiver is running
-    	if {[isrunning $fspid] == 0} {
-        	puts "\n\nfsarchiver is no longer running..\n"
-        	flush stdout
-        	return 1
-    	}
+        # Check that fsarchiver is running
+        if {[isrunning $fspid] == 0} {
+            puts "\n\nfsarchiver is no longer running..\n"
+            flush stdout
+            return 1
+        }
         if {$iwait > 19} {
             # This seems to be the easiest way to preserve stderr as
-            # (e.g.) a dialog will cover it up or garble it..       		
+            # (e.g.) a dialog will cover it up or garble it..               
             puts "\n\nERROR: wasn't able to start fsarchiver - see stderr"
             puts "(e.g. Check that partitions are large enough for id(s))"
             flush stdout
@@ -233,7 +233,7 @@ proc wait_for_fsarchiver_to_start {id2dev delay fspid} {
             after 5000
             return 1
         }
-        incr iwait       		
+        incr iwait              
     }
     return 0
 }
@@ -248,11 +248,11 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     # and introduces unnecessary failure possibilities.
     #
     
-    global configdir tclsh env
+    global configdir dialogrc tclsh env
     set pvalue 0
-    set env(DIALOGRC) ${configdir}/autumndc.rc
+    set env(DIALOGRC) ${configdir}/${dialogrc}
 
-    # Start up dialog gauge when fsarchiver starts writing 
+    # Start up dialog gauge when fsarchiver (archive-io thread) starts writing 
     set wdelay 2500
     if {[wait_for_fsarchiver_to_start $id2dev $wdelay $fspid]} {
     	return
@@ -268,9 +268,8 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     puts $fd3 " {"
     puts $fd3 [info body get_total_used]
     puts $fd3 " }"
-    
     puts $fd3 {global env}
-    puts $fd3 [subst {set env(DIALOGRC) ${configdir}/autumndc.rc}]
+    puts $fd3 [subst {set env(DIALOGRC) ${configdir}/${dialogrc}}]
     
     puts $fd3 {set dcom {|dialog --erase-on-exit }}
     puts $fd3 [subst {append dcom {--backtitle "FSArchiver $tag $fsa" }}]
@@ -305,16 +304,18 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
     file attributes $fsa_gauge -permissions u+rwx
     # Putting dialog gauge in the background seems to be the only way to get it to render proper consistently.
     # Also, the parent tclsh when called from mc must be a child process and not a grandchild+. i.e. dialog
-    # must have access to the controlling shell (aka console as referred to currently 01/09/26 - I always 
-    # considered "console" to refer to the start up shell of the hardware on bootup. i.e. there is one and 
-    # only one console on any one machine - but, the usage of "console" has changed in software circles..)
+    # must have access to the controlling shell
+    #
+    # TL;DR aka console as referred to currently 01/09/26 - I always considered "console" to refer to the 
+    # start up shell of the hardware on bootup. i.e. there is one and only one console on any one machine
+    # - but, the usage of "console" has changed in software circles..
     catch {exec $fsa_gauge &} ggpid istat
     set iwait 1
     while {[isrunning $fspid]} {
        after 500
        if {[isrunning $ggpid]} {continue}
        if {$iwait < 2} {
-           puts "\n\nWaiting for parent fsarchiver to terminate.."
+           puts "\n\nWaiting for fsarchiver (main thread) to terminate.."
            flush stdout
         } else {
            puts -nonewline "."
@@ -322,9 +323,9 @@ proc fsa_pbar {tag fsa delay fsize id2dev fspid} {
         }
         incr iwait
     }
-    # fsarchiver process status now returns defunct because it's been forced to stop before issuing its
-    # statistical output (I'd like an fsarchiver switch for this - but, not likely to happen unless I submit
-    # a PR). However, defunct is good enough as the parent process can now be killed and the OS will 
+    # fsarchiver process status now returns defunct because the main thread has been forced to stop before 
+    # its statistical output (I'd like an fsarchiver switch for this - but, not likely to happen unless issuing
+    # I submit a PR). However, defunct is good enough as the parent process can now be killed and the OS will 
     # clean up.
     while {[isrunning [pid]]} {
     	catch {exec kill -9 [pid] &} istat out
@@ -371,7 +372,7 @@ proc get_disk_part_list {} {
 
 proc get_disk_part_dialog {fsa} {
     # Presents radiolist dialog of disks and partitions to restore to
-    global configdir env
+    global configdir dialogrc env
     # Include only standard storage devices for now (e.g. disks, usb, nvme).
     set lsblk [get_disk_part_list]
     for {set ii 1} {$ii <= [llength $lsblk]} {incr ii} {
@@ -383,9 +384,9 @@ proc get_disk_part_dialog {fsa} {
     #    can be restored (to).
     set dcom {dialog --output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs $fsa" }
     set dcom [subst $dcom]
-    append dcom {--keep-tite --radiolist "Select disk or partition:" 16 100 0 }
+    append dcom {--keep-tite --radiolist "Select disk or partition to restore:" 16 100 0 }
     catch {append dcom [join $items " "]}
-    set env(DIALOGRC) ${configdir}/autumndc.rc
+    set env(DIALOGRC) ${configdir}/${dialogrc}
     file tempfile tmpfile
     set istat [catch {exec bash -c $dcom 2>$tmpfile} choice]
     if {[string is digit -strict $choice]} {
@@ -403,7 +404,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     # 
     # In this usage, the selected items will reflect the desired filesystem restoral
     # mapping
-    global configdir env
+    global configdir dialogrc env
     
     # Create unselected entries for each fsarchive id
     for {set ii 0} {$ii < [getfscount $archinfo]} {incr ii} {
@@ -443,7 +444,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
     append dcom {:" }
     append dcom { 0 80 20 }
     catch {append dcom [join $items " "]}
-    set env(DIALOGRC) ${configdir}/autumndc.rc
+    set env(DIALOGRC) ${configdir}/${dialogrc}
     file tempfile tmpfile
     # Execute the dialog command and it will return buildlist
     set istat [catch {exec bash -c $dcom 2>$tmpfile} buildlist]
@@ -461,7 +462,7 @@ proc get_archive_restore_buildlist_dialog {archinfo device device_type} {
 }
 
 proc final_restfs_checkpoint_and_go_ahead {fsa archinfo buildlist} {
-    global configdir nthr env
+    global configdir dialogrc nthr env
     set msg    {"Execute:\n\n }
     append msg { \\Zb\\Z1fsarchiver restfs $fsa $buildlist\\Zn\n\n }
     append msg {    -Please check that the \\Zb\\Z1dest=\\Zn parts make sense\n }
@@ -472,7 +473,7 @@ proc final_restfs_checkpoint_and_go_ahead {fsa archinfo buildlist} {
     append dcom {--colors --title "Final checkpoint, go ahead?" }
     append dcom {--output-fd 1 --erase-on-exit --backtitle "FSArchiver restfs" }
     append dcom [subst {--keep-tite --yesno $msg 16 80 }]
-    set env(DIALOGRC) ${configdir}/autumndc.rc
+    set env(DIALOGRC) ${configdir}/${dialogrc}
     set istat [catch {exec -- bash -c $dcom} output]
     if {$istat == 1} {
        # Stop
@@ -625,18 +626,18 @@ switch $cmd {
     "restfs" {
     	test_mcmenu [pwd]
         # Regular FSArchiver filesystem restoral
-        # Create dialog of disks and/or partitions to restore to
-        # (currently raids aren't allowed but, I should look into this. I think
-        #  if a raid can be backed up by fsarchiver then it can be treated like
-        #  a simple partition)
+        # Present dialog of disks and/or partitions to restore to
+        # (currently raids aren't allowed but, should look into this.
+        #  if a raid can be backed up by fsarchiver then it can be treated
+        #  like a simple partition)
         lassign [get_disk_part_dialog $fsa] dev devt
         if {[string length $devt] > 0} {        
             set buildlist [get_archive_restore_buildlist_dialog $archinfo $dev $devt]
             if {[llength $buildlist] < 1} {
             	exit
             }
-            # buildlist is empty or it contains proper fsarchiver id=##,dest=sssss in each
-            # list element.
+            # At this point, the buildlist is empty or it contains proper 
+            # fsarchiver arguments id=##,dest=sssss in each list element.
             if {[final_restfs_checkpoint_and_go_ahead $fsa $archinfo $buildlist]} {
                 set fsize [get_id_total_fsize $buildlist $archinfo]
                 # Start up restfs and a progress bar

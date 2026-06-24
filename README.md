@@ -2,12 +2,13 @@
 
 fsarchiver: helper scripts and approach(es)
 
-Leverage [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc) and a linux OS, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
+primarily, _fsarchiver-helpers_ is a restoral tool for fsarchiver _filesystem_ backups
 
-_fsarchiver-helpers_ is for fsarchiver _filesystem_ backups
+leverages [FSArchiver](https://www.fsarchiver.org/), [Midnight Commander](https://midnight-commander.org/) (mc), [dialog](https://invisible-island.net/dialog/) and linux, to enable some features not found in FSArchiver itself and perhaps mitigate some of the facility and data reflection issues.
+
 
 > [!NOTE] 
-> FSArchiver proper can also back up directory hierarchies via savedir, the output format is different e.g. flat backup and restoral menu items can be inserted directly into mc menus (i.e. no need for scripting).
+> FSArchiver proper can also back up directory hierarchies via savedir, the output format is different e.g. flat backup and restoral menu items can be inserted directly into mc menus; i.e. no need for intermediate filesystem or loop device
 
 ## Benefits
 + [TUI](https://en.wikipedia.org/wiki/Text-based_user_interface) _enabled by mc_ e.g. menus, popups, keycodes, customization, etc.
@@ -37,7 +38,7 @@ Typical usage with mc is to start up mc via:
 + keypress \<ESC\> to dismiss the menu
 + select an archive of interest
 + keypress F2 and double-click an operator
-+ Please see the [fsarchiver-helpers Users Guide](/../main/GUIDE.md) for more details
++ Please see the [fsarchiver-helpers Users Guide](GUIDE.md) for more details
 
 ## Dependencies
 + elevated credentials
@@ -49,7 +50,7 @@ Typical usage with mc is to start up mc via:
 + (TBD) fsarchiver-helpers makes no provision for encrypted archives currently
 
 ## Installation
-+ Download [fsarchiver-helpers]() (e.g. via the green <> Code button)
++ Download [fsarchiver-helpers]() (e.g. via git clone or equivalent operation provided by the repository)
 + Download [tclsh](https://sourceforge.net/projects/tcl/files/) version 9+ and install it (default install location is /usr/local/bin)
 
 ```bash 
@@ -84,19 +85,19 @@ fsarchiver.tcl mclocalmenu %d
 ```
 
 > [!IMPORTANT]
-> This will create an fsarchiver-helpers .mc.menu file in the current mc panel directory
+> This will create an fsarchiver-helpers .mc.menu file in the current mc panel directory (i.e. %d is an mc special shell variable - See the [mc man page](https://source.midnight-commander.org/man/mc.html#Macro_Substitution) for further details)
 
 + To test installation of .mc.menu keypress F2 (and the fsarchiver menu should display)
 
 ## Conventions, suggestions, notes
-   - Set backfsdir to the fastest storage device possible as this will speed up copyout operators
+   - Set backfsdir to the fastest storage device available as this will speed up copyout operators (keep in mind that this is a work space and probably doesn't need to be backed up)
    - naming conventions for FSArchiver archives
-     - consistency and helpful names & directories that provide a queue to content is suggested
+     - consistency and helpful names & directories that provide a cue to content is suggested
      - FSArchiver archives should be given a consistent suffix (e.g. .fsa)
-   - The naming convention for the backingstore files (bsf) serves only as a queue to content
+   - The naming convention for the backingstore files (bsf) serves only as a cue to content
      - fsarchiver.tcl will inspect the file system type associated with an id in a backup file. Effectively, btrfs file system backups will be copied to the btrfs bsf, while filesytem types that contain the string "fat" will be copied to  the vfat bsf and everything else will be copied to the ext4 bsf e.g. c200_ext4.img. Since fsarchiver will actually format the bsf according to the filesystem type stored in the backup, the naming convention has no functional effect.
-   - Note that the copyout progress bar waits for fsarchiver to terminate before it signals DONE
-     - when done - selecting the “other” panel in mc will reset the mc command line
+   - Note that copyout will display a progress bar (via dialog) that waits for the fsarchiver I/O thread to finish before closing.
+     - when fsarchiver has completely terminated the mc panel display will return
    - TBW 
      - using [Cherrytree](https://www.giuspen.net/cherrytree/) to codify backup & restoral steps on multiple systems
      - Combining mc with [konsole](https://konsole.kde.org) shortcuts or [qterminal](https://github.com/lxqt/qterminal) bookmarks
