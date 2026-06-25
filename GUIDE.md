@@ -13,7 +13,7 @@
 
 ### TOC
 - [How to configure fsarchiver.tcl](#how-to-configure-fsarchivertcl)
-- [How to create or recreate a local mc menu for fsarchiver](#creating-an-fsarchiver-mc-local-menu)
+- [How to create or recreate a local mc menu for fsarchiver](README.md#creating-an-fsarchiver-mc-local-menu)
 - [Display archive metadata](#how-to-display-info-about-an-fsarchiver-archive)
 - [Display installed filesystems](#detection-of-filesystems)
 - [How to mount and peruse an fsa filesystem](#how-to-copyout-mount-and-peruse-an-fsarchiver-archive-filesystem)
