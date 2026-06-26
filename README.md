@@ -1,4 +1,4 @@
-# fsarchiver-helpers
+# ![fsarchiver-helpers](images/fsa-helper64.png) fsarchiver-helpers
 
 fsarchiver: helper scripts and approach(es)
 
