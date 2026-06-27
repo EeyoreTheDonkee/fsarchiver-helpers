@@ -95,19 +95,19 @@ fsarchiver probe
 fsarchiver copyout (id=1)
 ```
 
-  - this will start the copyout and a progress bar will appear in the mc internal shell line.
-+ After the progress bar displays **DONE** then bring up the menu and double click:
+  - this will start the copyout and a dialog progress bar will display as soon as the fsarchiver I/O thread begins.
++ After the I/O thread terminates, the progress bar will stop and clear, fsarchivers main thread will terminate and control will be returned to mc. At this point, bring up the mc local menu and double click:
 
 ```
 fsarchiver mount backstores
 ```
 
-+ The internal viewer will display where the mount point of the backingstore is located
-+ Navigate to the mount point and the filesystem should be displayed in the mc panel. It is a fully restored filesystem. The only difference (effectively) is that it is contained in a backingstore file instead of a partition.
-+ All normal directory, file activities can now be performed on the mounted backingstore e.g. selection of files, inspections, copies, deletes, edits, etc.
++ After mounting the backingstore (via loop device), the internal viewer will display where the mount point of the backingstore is located
++ Navigate to the mount point and the filesystem should be displayed in the mc panel. It is a fully restored filesystem. The only difference (effectively) is that it is contained in a backingstore file instead of a regular partition.
++ All normal directory and/or file activities can now be performed on the mounted backingstore e.g. selection of files, inspections, copies, deletes, edits, etc.
 
 > [!NOTE]
-> It is currently useful to use the unmount operator before using copyout. This will free up aborted sessions and/or unused loop devices.
+> It may be useful to use the unmount operator before using copyout (it does no harm). This will free up aborted sessions and/or unused loop devices.
 
 [toc](#toc)
 

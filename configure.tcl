@@ -1,11 +1,26 @@
-# Test for mc, fsarchiver and fallocate
+# Test for mc, fsarchiver, fallocate and lsmod
 puts "Checking dependencies"
-foreach prog {mc fsarchiver fallocate} progdesc {{(Midnight Commander)} FSArchiver {}} {
+foreach prog {mc fsarchiver fallocate lsmod} progdesc {{(Midnight Commander)} FSArchiver {} {}} {
 	set progpath [auto_execok $prog]
 	if {[string length $progpath] < 1} {
    		puts "ERROR: $prog $progdesc not installed or accessible"
    		exit 1
 	}
+}
+
+# Test for kernel loop module
+set istat [catch {exec -- lsmod} out]
+if {$istat} {
+    puts "lsmod"
+    puts "   status message: $out"
+} else {
+    if {[regexp -- loop $out] == 0} {
+       puts " ERROR: kernel seems to be missing the loop module"
+       puts " Perhaps the module hasn't been loaded - try: modprobe loop"
+       puts " (see modprobe(8) for further info)"
+       puts " ..or perhaps the kernel has been updated and requires a reboot?"
+       exit 1
+    }
 }
 
 # Check for fsarchiver.tcl in custom path
